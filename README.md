@@ -99,6 +99,29 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOi...
 
 ### Étape 4 — Déployer la fonction serveur
 
+Deux façons de faire. **La méthode A ne demande rien d'autre qu'un navigateur** —
+c'est la plus simple si tu débutes ou si ton ordinateur est limité.
+
+#### Méthode A — depuis le site Supabase (sans terminal)
+
+1. Ouvre le fichier [`supabase/functions/chat/index.ts`](supabase/functions/chat/index.ts)
+   sur GitHub et copie tout son contenu (bouton « Copy raw file »).
+2. Dans ton tableau de bord Supabase, va dans **Edge Functions** (menu de gauche)
+   → **Deploy a new function** → **Via Editor**.
+3. Nomme la fonction exactement `chat`, colle le code à la place de l'exemple,
+   puis clique sur **Deploy function**.
+4. Toujours dans **Edge Functions**, ouvre l'onglet **Secrets**
+   → **Add new secret** :
+   - Name : `ANTHROPIC_API_KEY`
+   - Value : ta clé qui commence par `sk-ant-...`
+   → **Save**.
+5. Si tu modifies le code plus tard, reviens dans **Edge Functions → chat → Code**,
+   colle la nouvelle version et redéploie.
+
+> Le secret n'est visible que par la fonction. Il n'apparaît ni dans l'app, ni sur GitHub.
+
+#### Méthode B — depuis le terminal
+
 Installe l'outil en ligne de commande Supabase :
 
 ```bash
