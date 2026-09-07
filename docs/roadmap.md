@@ -3,6 +3,13 @@
 Où on en est et ce qui vient ensuite. Une étape à la fois : chaque étape doit
 fonctionner de bout en bout avant de passer à la suivante.
 
+Chaque étape a son ticket sur GitHub, avec les cases à cocher :
+[#1](https://github.com/Prodigexcellence/english-conversation-app/issues/1) ·
+[#2](https://github.com/Prodigexcellence/english-conversation-app/issues/2) ·
+[#3](https://github.com/Prodigexcellence/english-conversation-app/issues/3) ·
+[#4](https://github.com/Prodigexcellence/english-conversation-app/issues/4) ·
+[#5](https://github.com/Prodigexcellence/english-conversation-app/issues/5)
+
 ## ✅ Étape actuelle — Squelette texte (fait)
 
 - Projet Expo initialisé (SDK 57).
