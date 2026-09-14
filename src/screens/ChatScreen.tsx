@@ -31,7 +31,11 @@ function withId(message: ChatMessage): DisplayedMessage {
   return { ...message, id: `msg-${nextId}` };
 }
 
-export default function ChatScreen() {
+interface ChatScreenProps {
+  onBack: () => void;
+}
+
+export default function ChatScreen({ onBack }: ChatScreenProps) {
   const [messages, setMessages] = useState<DisplayedMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -85,7 +89,10 @@ export default function ChatScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>English practice</Text>
+          <Pressable onPress={onBack} hitSlop={12} accessibilityRole="button">
+            <Text style={styles.backButton}>‹ Accueil</Text>
+          </Pressable>
+          <Text style={styles.headerTitle}>Converser</Text>
           <Text style={styles.headerSubtitle}>Chat freely — level A2</Text>
         </View>
 
@@ -162,6 +169,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#d8dbe4',
     backgroundColor: '#ffffff',
   },
+  backButton: { fontSize: 15, color: '#4c6ef5', marginBottom: 6 },
   headerTitle: { fontSize: 18, fontWeight: '600', color: '#1f2333' },
   headerSubtitle: { fontSize: 13, color: '#6b7186', marginTop: 2 },
   listContent: { padding: 16, gap: 10 },

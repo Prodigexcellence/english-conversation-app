@@ -8,7 +8,10 @@
 
 import Anthropic from "npm:@anthropic-ai/sdk@0.124.0";
 
-const MODEL = "claude-opus-5";
+// Modèle principal (conversation en direct) : milieu de gamme, comme prévu dans le
+// plan de conception (section 6). Les tâches de fond viendront plus tard sur un
+// modèle moins cher. C'est ici qu'on change de modèle — nulle part ailleurs.
+const MODEL = "claude-sonnet-5";
 const MAX_MESSAGES = 40; // garde-fou : on ne renvoie pas un historique infini
 const MAX_CHARS_PER_MESSAGE = 2000;
 
