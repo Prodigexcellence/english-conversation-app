@@ -1,5 +1,35 @@
 # Roadmap
 
+## ⏸️ Projet en pause depuis le 14 septembre 2026
+
+Mis en pause au profit d'un prototype de la même app démarré sur un outil no-code, à
+finir et faire tester en premier. Rien n'est perdu — état exact ci-dessous.
+
+**Ce qui tourne déjà, sans rien à refaire :**
+- Le code est poussé sur la branche `claude/mobile-app-github-project-fj79b2`.
+- L'Edge Function `chat` est **déployée et active** sur le projet Supabase
+  « Prodigexcellence's Project » (eu-west-1). Elle y reste, le plan gratuit ne
+  l'expire pas tant que le projet est actif.
+
+**Le seul point resté ouvert :** le secret `ANTHROPIC_API_KEY` n'est pas posé.
+Sans lui, la fonction répond `500 Server not configured` — c'est le comportement
+attendu, pas une panne.
+
+**Pour reprendre, dans l'ordre :**
+1. Créer une clé sur console.anthropic.com et la poser dans
+   Supabase → Edge Functions → Secrets, sous le nom `ANTHROPIC_API_KEY`.
+2. Créer un fichier `.env` à la racine (voir `.env.example`) avec l'URL du projet
+   Supabase et la clé publique — les deux se trouvent dans
+   Supabase → Project Settings → API.
+3. `npm install` puis `npm start`, scanner le QR code avec Expo Go.
+4. Reprendre à l'étape 4 ci-dessous : valider le comportement de l'IA.
+
+Un enseignement du prototype no-code vaudra mieux que n'importe quelle décision prise
+ici dans le vide : ce qui en ressortira devra remonter dans le plan de conception avant
+de reprendre le code.
+
+---
+
 Suit la roadmap du [plan de conception](plan-conception.md) (section 10). Une étape à la
 fois : chaque étape doit fonctionner de bout en bout avant de passer à la suivante.
 
