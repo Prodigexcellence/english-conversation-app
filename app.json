@@ -37,6 +37,18 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "owner": "prodigexcellences-team",
+    "extra": {
+      "eas": {
+        "projectId": "ea881a42-d033-4081-b16f-9bd946d08525"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/ea881a42-d033-4081-b16f-9bd946d08525"
     }
   }
 }
