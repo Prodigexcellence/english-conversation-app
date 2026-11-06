@@ -1,6 +1,6 @@
 import { Redirect } from "expo-router";
 
-// Les autres écrans arrivent avec la suite de l'étape 2 : pour l'instant, l'app s'ouvre sur la Conversation.
+// Maquette : l'app s'ouvre toujours sur la Bienvenue, comme pour un nouvel utilisateur.
 export default function Index() {
-  return <Redirect href="/conversation" />;
+  return <Redirect href="/welcome" />;
 }

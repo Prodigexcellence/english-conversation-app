@@ -1,7 +1,7 @@
+import { router } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -16,8 +16,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { PartnerAvatar, type PartnerState } from "@/components/PartnerAvatar";
+import { BackButton } from "@/components/ui";
 import { type AiTurn, type Correction, demoAiTurns, demoUserLines, openingLine } from "@/data/demoConversation";
 import { partners } from "@/data/partners";
+import { useProfile } from "@/state/profile";
 import { type Colors, fonts, useColors } from "@/theme";
 
 type Message = { id: number; role: "ai" | "user"; text: string; correction?: Correction };
@@ -35,8 +37,9 @@ export default function ConversationScreen() {
   const { width, height } = useWindowDimensions();
   const avatarSize = Math.min(width * 0.36, height * 0.17, 200);
 
-  const [partnerIndex, setPartnerIndex] = useState(0);
-  const partner = partners[partnerIndex];
+  const { profile, setLastSession } = useProfile();
+  const partner = partners.find((p) => p.id === profile.partnerId) ?? partners[0];
+  const [startedAt] = useState(() => Date.now());
   const [messages, setMessages] = useState<Message[]>([]);
   const [phase, setPhaseState] = useState<PartnerState>("idle");
   const [draft, setDraft] = useState("");
@@ -77,33 +80,25 @@ export default function ConversationScreen() {
   };
 
   // L'IA « réfléchit », écrit sa réponse, puis la « lit » le temps qu'il faut pour la dire.
-  const aiRespond = useCallback((turn: AiTurn) => {
+  const aiRespond = (turn: AiTurn) => {
     setPhase("thinking");
     later(1100, () => {
       push({ role: "ai", text: turn.text, correction: turn.correction });
       setPhase("speaking");
       later(Math.max(1600, turn.text.length * 55), () => setPhase("idle"));
     });
-  }, []);
+  };
 
   const nextAiTurn = () => demoAiTurns[takeNext(aiIndex) % demoAiTurns.length];
 
-  // L'IA ouvre la conversation, à l'arrivée sur l'écran et après chaque changement de partenaire.
+  // L'IA ouvre la conversation dès l'arrivée sur l'écran.
+  const open = useEffectEvent(() => later(500, () => aiRespond(openingLine(partner.name))));
+  const stop = useEffectEvent(() => clearTimers());
   useEffect(() => {
-    later(500, () => aiRespond(openingLine(partner.name)));
-    return clearTimers;
-  }, [partner.name, aiRespond]);
+    open();
+    return () => stop();
+  }, []);
 
-  const switchPartner = () => {
-    clearTimers();
-    setMessages([]);
-    setHint("");
-    setDraft("");
-    aiIndex.current = 0;
-    userIndex.current = 0;
-    setPhase("idle");
-    setPartnerIndex((i) => (i + 1) % partners.length);
-  };
 
   const busy = phase === "thinking" || phase === "speaking";
 
@@ -134,31 +129,28 @@ export default function ConversationScreen() {
     aiRespond(nextAiTurn());
   };
 
-  const onEnd = () =>
-    Alert.alert("Terminer la séance ?", "Le bilan de séance arrivera dans une prochaine maquette.", [
-      { text: "Continuer à parler", style: "cancel" },
-    ]);
+  const onEnd = () => {
+    clearTimers();
+    setLastSession({
+      durationSec: Math.round((Date.now() - startedAt) / 1000),
+      corrections: messages.flatMap((m) => (m.correction ? [m.correction] : [])),
+      userTurns: messages.filter((m) => m.role === "user").length,
+    });
+    router.replace("/summary");
+  };
 
   return (
     <SafeAreaView style={s.safe} edges={["top", "bottom"]}>
       <KeyboardAvoidingView style={s.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <View style={s.column}>
           <View style={s.header}>
+            <BackButton />
             <View style={s.flex}>
               <Text style={s.name} accessibilityRole="header">
                 {partner.name}
               </Text>
               <Text style={s.status}>{STATUS[phase]}</Text>
             </View>
-            <Pressable
-              onPress={switchPartner}
-              style={({ pressed }) => [s.pill, pressed && s.pressed]}
-              accessibilityRole="button"
-              accessibilityLabel="Changer de partenaire de conversation"
-            >
-              <SymbolView name={{ ios: "arrow.triangle.2.circlepath", android: "sync", web: "sync" }} size={16} tintColor={colors.textMuted} />
-              <Text style={s.pillText}>Changer</Text>
-            </Pressable>
             <Pressable onPress={onEnd} style={({ pressed }) => [s.endButton, pressed && s.pressed]} accessibilityRole="button">
               <Text style={s.endText}>Terminer</Text>
             </Pressable>
@@ -258,18 +250,6 @@ function makeStyles(c: Colors) {
     header: { flexDirection: "row", alignItems: "center", gap: 10, paddingTop: 8, paddingBottom: 6 },
     name: { fontFamily: fonts.semibold, fontSize: 22, color: c.text },
     status: { fontFamily: fonts.regular, fontSize: 14, color: c.textMuted },
-    pill: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 6,
-      minHeight: 44,
-      paddingHorizontal: 12,
-      borderRadius: 22,
-      backgroundColor: c.surface,
-      borderWidth: 1,
-      borderColor: c.border,
-    },
-    pillText: { fontFamily: fonts.medium, fontSize: 14, color: c.textMuted },
     endButton: { minHeight: 44, justifyContent: "center", paddingHorizontal: 14, borderRadius: 22, backgroundColor: c.aiBubble },
     endText: { fontFamily: fonts.semibold, fontSize: 15, color: c.primary },
     pressed: { opacity: 0.55 },

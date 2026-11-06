@@ -13,6 +13,7 @@ const light = {
   accentSoft: "#A9C3F8",
   stage: "#E3ECFC",
   field: "#F1F3F6",
+  danger: "#C2372D",
 };
 
 const dark: typeof light = {
@@ -27,6 +28,7 @@ const dark: typeof light = {
   accentSoft: "#3D5A94",
   stage: "#1A2538",
   field: "#1F2631",
+  danger: "#F0776C",
 };
 
 export type Colors = typeof light;
