@@ -1,28 +1,6 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Redirect } from "expo-router";
 
+// Les autres écrans arrivent avec la suite de l'étape 2 : pour l'instant, l'app s'ouvre sur la Conversation.
 export default function Index() {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>English Conversation</Text>
-      <Text style={styles.subtitle}>Étape 0 : l&apos;application démarre.</Text>
-    </View>
-  );
+  return <Redirect href="/conversation" />;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    padding: 24,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "600",
-  },
-  subtitle: {
-    fontSize: 16,
-    opacity: 0.7,
-  },
-});
