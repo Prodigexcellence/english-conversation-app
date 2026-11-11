@@ -36,9 +36,17 @@ export default function WelcomeScreen() {
         <View style={[styles.bubble, { backgroundColor: c.surface, borderColor: c.border }]}>
           <Text style={[styles.bubbleText, { color: c.text }]}>Hi! Shall we talk?</Text>
         </View>
-        <Text style={[styles.brand, { color: c.text }]} accessibilityRole="header">
-          <Text style={{ color: c.primary }}>English</Text> Conversation
-        </Text>
+        <View style={styles.lockup}>
+          <Image
+            source={require("@/assets/images/logo.png")}
+            style={styles.logo}
+            contentFit="contain"
+            accessibilityLabel="Logo English Conversation"
+          />
+          <Text style={[styles.brand, { color: c.text }]} accessibilityRole="header">
+            <Text style={{ color: c.primary }}>English</Text> Conversation
+          </Text>
+        </View>
         <Body muted center>
           Parle anglais avec un partenaire patient. Il lance la conversation, relance toujours et corrige en douceur.
         </Body>
@@ -60,5 +68,7 @@ const styles = StyleSheet.create({
     marginTop: -6,
   },
   bubbleText: { fontFamily: fonts.medium, fontSize: 16 },
+  lockup: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 12, flexWrap: "wrap" },
+  logo: { width: 52, height: 52 },
   brand: { fontFamily: fonts.semibold, fontSize: 32, textAlign: "center" },
 });
