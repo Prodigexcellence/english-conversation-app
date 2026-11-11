@@ -1,13 +1,16 @@
 import { useColorScheme } from "react-native";
 
 // Charte validée le 6 novembre 2026 : bleu, gris, bleu clair ; police Lexend.
+// Bleu principal : bleu maya, le même en mode clair et sombre, avec du texte blanc dessus.
+const MAYA_BLUE = "#4372F6";
+
 const light = {
   background: "#F1F3F6",
   surface: "#FFFFFF",
   text: "#1A1F2B",
   textMuted: "#5D6676",
   border: "#E4E8EE",
-  primary: "#2A5BD7",
+  primary: MAYA_BLUE,
   onPrimary: "#FFFFFF",
   aiBubble: "#DDE8FC",
   accentSoft: "#A9C3F8",
@@ -22,8 +25,8 @@ const dark: typeof light = {
   text: "#E8ECF2",
   textMuted: "#9AA4B4",
   border: "#2B3340",
-  primary: "#6E97F2",
-  onPrimary: "#0E1420",
+  primary: MAYA_BLUE,
+  onPrimary: "#FFFFFF",
   aiBubble: "#233352",
   accentSoft: "#3D5A94",
   stage: "#1A2538",

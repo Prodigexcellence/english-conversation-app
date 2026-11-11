@@ -1,10 +1,10 @@
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, TextInput, View } from "react-native";
 
 import { BackButton, Body, Button, Card, Chips, Label, Option, Screen, Title } from "@/components/ui";
-import { partners } from "@/data/partners";
+import { accentLabel, partners } from "@/data/partners";
 import { type Goal, type Level, useProfile } from "@/state/profile";
 import { fonts, useColors } from "@/theme";
 
@@ -13,16 +13,17 @@ const LEVELS: { value: Level; label: string }[] = ["A1", "A2", "B1", "B2", "C1",
   label: l,
 }));
 
-const GOALS: { value: Goal; title: string; subtitle: string }[] = [
+const GOALS: { value: Goal; title: string; subtitle?: string }[] = [
   { value: "travail", title: "Pour le travail", subtitle: "Réunions, appels, collègues étrangers" },
   { value: "voyage", title: "Pour voyager", subtitle: "Hôtel, restaurant, aéroport, rencontres" },
   { value: "examen", title: "Pour un examen", subtitle: "TOEIC, IELTS, Cambridge, oral de concours" },
   { value: "plaisir", title: "Pour le plaisir", subtitle: "Films, séries, culture, amis" },
+  { value: "autre", title: "Autre" },
 ];
 
 const STEPS = 5;
 
-// E3 — Onboarding : langue parlée, langue apprise et accent, partenaire, objectif, niveau.
+// E3 — Onboarding : langue parlée, langue apprise, partenaire (qui fixe l'accent), objectif, niveau.
 export default function OnboardingScreen() {
   const c = useColors();
   const { profile, update } = useProfile();
@@ -56,23 +57,10 @@ export default function OnboardingScreen() {
   } else if (step === 1) {
     content = (
       <>
-        <Title>Quelle langue veux-tu pratiquer ?</Title>
+        <Title>Quelle langue veux-tu apprendre ?</Title>
         <Option title="Anglais" selected />
         <Option title="Espagnol" soon />
-        <Option title="Chinois" soon />
-        <Label>Accent</Label>
-        <Option
-          title="Américain"
-          subtitle="color, apartment, vacation"
-          selected={profile.accent === "us"}
-          onPress={() => update({ accent: "us" })}
-        />
-        <Option
-          title="Britannique"
-          subtitle="colour, flat, holiday"
-          selected={profile.accent === "uk"}
-          onPress={() => update({ accent: "uk" })}
-        />
+        <Option title="Mandarin (chinois)" soon />
       </>
     );
     footer = <Button title="Continuer" onPress={() => setStep(2)} />;
@@ -85,7 +73,7 @@ export default function OnboardingScreen() {
           <Option
             key={p.id}
             title={p.name}
-            subtitle={p.id === "leo" ? "Détendu et curieux" : "Chaleureux et encourageant"}
+            subtitle={`Accent ${accentLabel(p.accent)} · ${p.id === "leo" ? "Détendu et curieux" : "Chaleureux et encourageant"}`}
             selected={profile.partnerId === p.id}
             onPress={() => update({ partnerId: p.id })}
             left={
@@ -112,6 +100,17 @@ export default function OnboardingScreen() {
             onPress={() => update({ goal: g.value })}
           />
         ))}
+        {profile.goal === "autre" ? (
+          <TextInput
+            value={profile.goalNote}
+            onChangeText={(goalNote) => update({ goalNote })}
+            placeholder="Dis-nous pourquoi (facultatif)"
+            placeholderTextColor={c.textMuted}
+            accessibilityLabel="Dis-nous pourquoi (facultatif)"
+            style={[styles.input, { backgroundColor: c.surface, borderColor: c.border, color: c.text }]}
+            multiline
+          />
+        ) : null}
       </>
     );
     footer = <Button title="Continuer" disabled={!profile.goal} onPress={() => setStep(4)} />;
@@ -127,7 +126,7 @@ export default function OnboardingScreen() {
         />
         <Option
           title="Je connais déjà mon niveau"
-          subtitle="Tu pourras le changer dans les réglages."
+          subtitle="Sélectionne ici ton niveau. Tu pourras le changer dans les réglages."
           selected={levelMode === "declare"}
           onPress={() => setLevelMode("declare")}
         />
@@ -196,6 +195,15 @@ const styles = StyleSheet.create({
   bar: { height: 8, borderRadius: 4 },
   count: { fontFamily: fonts.medium, fontSize: 14, minWidth: 32, textAlign: "right" },
   thumb: { width: 56, height: 56, borderRadius: 28, overflow: "hidden" },
+  input: {
+    minHeight: 52,
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontFamily: fonts.regular,
+    fontSize: 16,
+  },
   result: { alignItems: "center", paddingVertical: 28 },
   level: { fontFamily: fonts.semibold, fontSize: 56 },
 });

@@ -3,7 +3,7 @@ import { router } from "expo-router";
 import { Alert, StyleSheet, View } from "react-native";
 
 import { BackButton, Body, Button, Card, Chips, Label, Option, Screen, Title } from "@/components/ui";
-import { partners } from "@/data/partners";
+import { accentLabel, partners } from "@/data/partners";
 import { type Level, useProfile } from "@/state/profile";
 
 const LEVELS = (["A1", "A2", "B1", "B2", "C1", "C2"] as Level[]).map((l) => ({ value: l, label: l }));
@@ -40,6 +40,7 @@ export default function SettingsScreen() {
         <Option
           key={p.id}
           title={p.name}
+          subtitle={`Accent ${accentLabel(p.accent)}`}
           selected={profile.partnerId === p.id}
           onPress={() => update({ partnerId: p.id })}
           left={
@@ -52,16 +53,6 @@ export default function SettingsScreen() {
 
       <Label>Mon niveau</Label>
       <Chips options={LEVELS} value={profile.level} onChange={(level) => update({ level, levelSource: "declare" })} />
-
-      <Label>Accent</Label>
-      <Chips
-        options={[
-          { value: "us", label: "Américain" },
-          { value: "uk", label: "Britannique" },
-        ]}
-        value={profile.accent}
-        onChange={(accent) => update({ accent })}
-      />
 
       <Label>Vitesse de la voix</Label>
       <Chips

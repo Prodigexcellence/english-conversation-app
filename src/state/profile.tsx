@@ -3,16 +3,17 @@ import { createContext, type ReactNode, useContext, useState } from "react";
 import type { Correction } from "@/data/demoConversation";
 import type { Partner } from "@/data/partners";
 
-export type Accent = "us" | "uk";
-export type Goal = "travail" | "voyage" | "examen" | "plaisir";
+export type Goal = "travail" | "voyage" | "examen" | "plaisir" | "autre";
 export type Level = "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
 export type VoiceSpeed = "lente" | "normale" | "rapide";
 export type InputMode = "voix" | "texte";
 
 export type Profile = {
-  accent: Accent;
+  // L'accent n'est pas stocké : il se déduit du partenaire (voir `partners`).
   partnerId: Partner["id"];
   goal: Goal | null;
+  // Précision facultative quand l'objectif est « Autre ».
+  goalNote: string;
   level: Level | null;
   levelSource: "test" | "declare" | null;
   voiceSpeed: VoiceSpeed;
@@ -22,9 +23,9 @@ export type Profile = {
 export type SessionSummary = { durationSec: number; corrections: Correction[]; userTurns: number };
 
 const defaultProfile: Profile = {
-  accent: "us",
   partnerId: "leo",
   goal: null,
+  goalNote: "",
   level: null,
   levelSource: null,
   voiceSpeed: "normale",
