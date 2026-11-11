@@ -10,7 +10,7 @@ export type Partner = {
   talkImage?: number;
 };
 
-// Noms provisoires. Les images sont les aperçus Canva en attendant les originaux.
+// Noms provisoires. Images Canva (environ 560 × 490 px), rognées à l'identique pour que les variantes se superposent.
 export const partners: Partner[] = [
   {
     id: "leo",
