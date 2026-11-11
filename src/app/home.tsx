@@ -23,7 +23,7 @@ export default function HomeScreen() {
   const titleSize = Math.max(22, Math.min(30, Math.floor(cardInner / 5.6)));
 
   return (
-    <Screen>
+    <Screen centered>
       <View style={styles.top}>
         <View style={{ flex: 1 }}>
           <Title>Bonjour !</Title>
