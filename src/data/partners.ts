@@ -24,6 +24,7 @@ export const partners: Partner[] = [
     name: "Marcus",
     accent: "us",
     image: require("@/assets/images/partners/marcus.png"),
+    talkImage: require("@/assets/images/partners/marcus-talk.png"),
   },
 ];
 
