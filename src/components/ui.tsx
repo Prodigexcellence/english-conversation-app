@@ -12,13 +12,13 @@ export function Screen({
   children,
   scroll = true,
   footer,
-  centered,
+  fill,
 }: {
   children: ReactNode;
   scroll?: boolean;
   footer?: ReactNode;
-  // Centre le contenu verticalement quand il est plus court que l'écran.
-  centered?: boolean;
+  // Le contenu occupe toute la hauteur de l'écran, pour pouvoir en centrer une partie.
+  fill?: boolean;
 }) {
   const c = useColors();
   const s = styles(c);
@@ -26,7 +26,7 @@ export function Screen({
     <SafeAreaView style={s.safe} edges={["top", "bottom"]}>
       {scroll ? (
         <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled">
-          <View style={[s.column, centered && s.centered]}>{children}</View>
+          <View style={[s.column, fill && s.filled]}>{children}</View>
         </ScrollView>
       ) : (
         <View style={[s.column, s.fill]}>{children}</View>
@@ -218,7 +218,7 @@ function styles(c: Colors) {
     scroll: { flexGrow: 1 },
     column: { width: "100%", maxWidth: 560, alignSelf: "center", paddingHorizontal: 20, gap: 16 },
     fill: { flex: 1 },
-    centered: { flexGrow: 1, justifyContent: "center", paddingVertical: 24 },
+    filled: { flexGrow: 1, paddingBottom: 24 },
     footer: { paddingTop: 12, paddingBottom: 8, gap: 10 },
     title: { fontFamily: fonts.semibold, fontSize: 28, lineHeight: 34, color: c.text },
     body: { fontFamily: fonts.regular, fontSize: 16, lineHeight: 24, color: c.text },

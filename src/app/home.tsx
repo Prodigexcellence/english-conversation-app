@@ -23,7 +23,7 @@ export default function HomeScreen() {
   const titleSize = Math.max(22, Math.min(30, Math.floor(cardInner / 5.6)));
 
   return (
-    <Screen centered>
+    <Screen fill>
       <View style={styles.top}>
         <View style={{ flex: 1 }}>
           <Title>Bonjour !</Title>
@@ -36,67 +36,71 @@ export default function HomeScreen() {
         />
       </View>
 
-      <View style={styles.cards}>
-        <Pressable
-          onPress={() => router.push("/conversation")}
-          accessibilityRole="button"
-          accessibilityLabel={`Converser avec ${partner.name}`}
-          style={({ pressed }) => [styles.card, { backgroundColor: c.primary }, pressed && { opacity: 0.85 }]}
-        >
-          <View style={styles.cardTop}>
-            <View style={[styles.portrait, { borderColor: c.onPrimary }]}>
-              <Image source={partner.image} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition="top" />
+      <View style={styles.middle}>
+        <View style={styles.cards}>
+          <Pressable
+            onPress={() => router.push("/conversation")}
+            accessibilityRole="button"
+            accessibilityLabel={`Converser avec ${partner.name}`}
+            style={({ pressed }) => [styles.card, { backgroundColor: c.primary }, pressed && { opacity: 0.85 }]}
+          >
+            <View style={styles.cardTop}>
+              <View style={[styles.portrait, { borderColor: c.onPrimary }]}>
+                <Image source={partner.image} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition="top" />
+              </View>
             </View>
-          </View>
-          <Text style={[styles.cardTitle, { color: c.onPrimary, fontSize: titleSize, lineHeight: titleSize + 6 }]} numberOfLines={1} adjustsFontSizeToFit>
-            Converser
-          </Text>
-          <Text style={[styles.cardSubtitle, { color: c.onPrimary }]}>Parler avec {partner.name}</Text>
-          <Text style={[styles.cardText, { color: c.onPrimary }]}>Il lance la conversation, toi tu réponds à voix haute.</Text>
-          <View style={styles.spacer} />
-          <View style={[styles.go, { backgroundColor: c.onPrimary }]}>
-            <SymbolView name={{ ios: "mic.fill", android: "mic", web: "mic" }} size={18} tintColor={c.primary} />
-            <Text style={[styles.goText, { color: c.primary }]}>Commencer</Text>
-          </View>
-        </Pressable>
+            <Text style={[styles.cardTitle, { color: c.onPrimary, fontSize: titleSize, lineHeight: titleSize + 6 }]} numberOfLines={1} adjustsFontSizeToFit>
+              Converser
+            </Text>
+            <Text style={[styles.cardSubtitle, { color: c.onPrimary }]}>Parler avec {partner.name}</Text>
+            <Text style={[styles.cardText, { color: c.onPrimary }]}>Il lance la conversation, toi tu réponds à voix haute.</Text>
+            <View style={styles.spacer} />
+            <View style={[styles.go, { backgroundColor: c.onPrimary }]}>
+              <SymbolView name={{ ios: "mic.fill", android: "mic", web: "mic" }} size={18} tintColor={c.primary} />
+              <Text style={[styles.goText, { color: c.primary }]}>Commencer</Text>
+            </View>
+          </Pressable>
 
-        <View
-          style={[styles.card, styles.learn, { backgroundColor: c.surface, borderColor: c.border }]}
-          accessibilityState={{ disabled: true }}
-        >
-          <View style={styles.cardTop}>
-            <Text style={[styles.soon, { backgroundColor: c.field, color: c.textMuted }]}>Bientôt</Text>
+          <View
+            style={[styles.card, styles.learn, { backgroundColor: c.surface, borderColor: c.border }]}
+            accessibilityState={{ disabled: true }}
+          >
+            <View style={styles.cardTop}>
+              <Text style={[styles.soon, { backgroundColor: c.field, color: c.textMuted }]}>Bientôt</Text>
+            </View>
+            <Text style={[styles.cardTitle, { color: c.text, fontSize: titleSize, lineHeight: titleSize + 6 }]} numberOfLines={1} adjustsFontSizeToFit>
+              Apprendre
+            </Text>
+            <Text style={[styles.cardSubtitle, { color: c.text }]}>Cours avec ton professeur</Text>
+            <Text style={[styles.cardText, { color: c.textMuted }]}>
+              Un programme qui avance selon ton niveau : grammaire, orthographe, lexique…
+            </Text>
           </View>
-          <Text style={[styles.cardTitle, { color: c.text, fontSize: titleSize, lineHeight: titleSize + 6 }]} numberOfLines={1} adjustsFontSizeToFit>
-            Apprendre
-          </Text>
-          <Text style={[styles.cardSubtitle, { color: c.text }]}>Cours avec ton professeur</Text>
-          <Text style={[styles.cardText, { color: c.textMuted }]}>
-            Un programme qui avance selon ton niveau : grammaire, orthographe, lexique…
-          </Text>
         </View>
+
+        <Card>
+          <View style={styles.row}>
+            <Text style={[styles.progressTitle, { color: c.text }]}>Aujourd&apos;hui</Text>
+            <Text style={[styles.cardValue, { color: c.textMuted }]}>
+              {left} min restantes sur {DAILY_MINUTES}
+            </Text>
+          </View>
+          <View style={[styles.track, { backgroundColor: c.field }]}>
+            <View style={[styles.bar, { backgroundColor: c.primary, width: `${(usedMinutes / DAILY_MINUTES) * 100}%` }]} />
+          </View>
+          <Body muted>
+            Niveau {profile.level ?? "non défini"} · accent {accentLabel(partner.accent)}
+          </Body>
+        </Card>
       </View>
-
-      <Card>
-        <View style={styles.row}>
-          <Text style={[styles.progressTitle, { color: c.text }]}>Aujourd&apos;hui</Text>
-          <Text style={[styles.cardValue, { color: c.textMuted }]}>
-            {left} min restantes sur {DAILY_MINUTES}
-          </Text>
-        </View>
-        <View style={[styles.track, { backgroundColor: c.field }]}>
-          <View style={[styles.bar, { backgroundColor: c.primary, width: `${(usedMinutes / DAILY_MINUTES) * 100}%` }]} />
-        </View>
-        <Body muted>
-          Niveau {profile.level ?? "non défini"} · accent {accentLabel(partner.accent)}
-        </Body>
-      </Card>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   top: { flexDirection: "row", alignItems: "center", gap: 12, paddingTop: 16 },
+  // Les cartes et la progression se centrent dans l'espace sous le « Bonjour ! ».
+  middle: { flexGrow: 1, justifyContent: "center", gap: 16 },
   cards: { flexDirection: "row", gap: 12 },
   card: { flex: 1, borderRadius: 24, padding: 16, gap: 6, overflow: "hidden" },
   cardTop: { height: 76, alignItems: "flex-start", justifyContent: "flex-start", marginBottom: 6 },
