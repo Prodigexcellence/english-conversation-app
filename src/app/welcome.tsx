@@ -41,10 +41,10 @@ export default function WelcomeScreen() {
             source={require("@/assets/images/logo.png")}
             style={styles.logo}
             contentFit="contain"
-            accessibilityLabel="Logo English Conversation"
+            accessibilityLabel="Logo New Language"
           />
           <Text style={[styles.brand, { color: c.text }]} accessibilityRole="header">
-            <Text style={{ color: c.primary }}>English</Text> Conversation
+            <Text style={{ color: c.primary }}>New</Text> Language
           </Text>
         </View>
         <Body muted center>

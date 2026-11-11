@@ -1,4 +1,4 @@
-# English Conversation
+# New Language
 
 Application mobile pour pratiquer l'anglais à l'oral avec une IA qui prend l'initiative,
 relance et corrige en douceur.
