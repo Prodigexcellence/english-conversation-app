@@ -6,8 +6,10 @@ relance et corrige en douceur.
 Le document de référence est le cahier des charges :
 https://claude.ai/artifact/9xJQNBdQTj44qMyuFnav5Y
 
-**État actuel : étape 0.** Le projet vient d'être recréé à partir de zéro (Expo SDK 58,
-Expo Router). L'écran d'accueil affiche seulement le nom de l'app.
+**État actuel : étape 2 terminée** (11 novembre 2026). Maquette cliquable des 7 écrans (Expo SDK 58,
+Expo Router), sans serveur ni IA : les réponses sont simulées et le profil reste en mémoire.
+Prochaine étape : 3, fondations techniques (comptes, base de données Supabase).
+Les sources du logo sont dans `design/logo/`.
 
 L'ancien squelette de septembre 2026 reste disponible sur la branche
 `claude/mobile-app-github-project-fj79b2`.
