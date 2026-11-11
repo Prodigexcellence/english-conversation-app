@@ -4,11 +4,14 @@ import { useColorScheme } from "react-native";
 // Bleu principal : bleu maya, le même en mode clair et sombre, avec du texte blanc dessus.
 const MAYA_BLUE = "#4372F6";
 
+// Fond des écrans : le bleu maya clair du logo. Le gris secondaire est foncé pour rester lisible dessus.
+const LOGO_BLUE = "#8FB0FA";
+
 const light = {
-  background: "#F1F3F6",
+  background: LOGO_BLUE,
   surface: "#FFFFFF",
   text: "#1A1F2B",
-  textMuted: "#5D6676",
+  textMuted: "#36404F",
   border: "#E4E8EE",
   primary: MAYA_BLUE,
   onPrimary: "#FFFFFF",
