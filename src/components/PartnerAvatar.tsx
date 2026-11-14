@@ -2,7 +2,7 @@ import { Image } from "expo-image";
 import { useEffect, useState } from "react";
 import { Animated, Easing, StyleSheet, View } from "react-native";
 
-import type { Partner } from "@/data/partners";
+import { type Partner, PARTNER_IMAGE_SIZE } from "@/data/partners";
 import { useColors } from "@/theme";
 
 export type PartnerState = "idle" | "listening" | "thinking" | "speaking";
@@ -37,6 +37,24 @@ export function PartnerAvatar({ partner, state, size }: Props) {
   const dots = [dot0, dot1, dot2];
   const [mouthOpen, setMouthOpen] = useState(false);
   const talking = state === "speaking" && Boolean(partner.talkImage);
+  const [blinking, setBlinking] = useState(false);
+
+  // Clignement : toutes les 3 à 6 secondes, les paupières se ferment 0,14 seconde.
+  useEffect(() => {
+    if (!partner.eyes) return;
+    let timer: ReturnType<typeof setTimeout>;
+    const schedule = () => {
+      timer = setTimeout(() => {
+        setBlinking(true);
+        timer = setTimeout(() => {
+          setBlinking(false);
+          schedule();
+        }, 140);
+      }, 3000 + Math.random() * 3000);
+    };
+    schedule();
+    return () => clearTimeout(timer);
+  }, [partner.eyes]);
 
   // Respiration légère, en permanence.
   useEffect(() => {
@@ -115,6 +133,11 @@ export function PartnerAvatar({ partner, state, size }: Props) {
 
   const circle = { width: size, height: size, borderRadius: size / 2 };
 
+  // L'image remplit le cercle (bordure de 4 déduite) en hauteur, centrée en largeur.
+  const inner = size - 8;
+  const scale = inner / PARTNER_IMAGE_SIZE.height;
+  const offsetX = (PARTNER_IMAGE_SIZE.width * scale - inner) / 2;
+
   return (
     <View style={{ width: size * 1.45, height: size * 1.45, alignItems: "center", justifyContent: "center" }}>
       <Animated.View style={[styles.abs, circle, { borderColor: colors.accentSoft }, styles.ring, ringStyle(ring1)]} />
@@ -146,6 +169,25 @@ export function PartnerAvatar({ partner, state, size }: Props) {
             contentPosition="top"
           />
         ) : null}
+        {blinking
+          ? partner.eyes?.map((e, i) => (
+              <View
+                key={i}
+                pointerEvents="none"
+                style={[
+                  styles.lid,
+                  {
+                    left: (e.x - e.w * 0.6) * scale - offsetX,
+                    top: (e.y - e.h * 0.65) * scale,
+                    width: e.w * 1.2 * scale,
+                    height: e.h * 1.3 * scale,
+                    borderRadius: e.h * scale,
+                    backgroundColor: e.skin,
+                  },
+                ]}
+              />
+            ))
+          : null}
       </Animated.View>
       <View style={[styles.dots, { top: size * 0.08, right: size * 0.02 }]} pointerEvents="none">
         {dots.map((d, i) => (
@@ -170,6 +212,8 @@ const styles = StyleSheet.create({
   abs: { position: "absolute" },
   ring: { borderWidth: 3 },
   photo: { overflow: "hidden", borderWidth: 4 },
+  // Paupière fermée : couleur de peau, avec la ligne des cils en bas.
+  lid: { position: "absolute", borderBottomWidth: 1.5, borderBottomColor: "#2B1A12" },
   dots: { position: "absolute", flexDirection: "row", gap: 6 },
   dot: { width: 10, height: 10, borderRadius: 5 },
 });
