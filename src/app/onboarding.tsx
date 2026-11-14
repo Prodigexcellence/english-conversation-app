@@ -1,5 +1,4 @@
 import { Image } from "expo-image";
-import { router } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, Text, TextInput, View } from "react-native";
 
@@ -26,18 +25,28 @@ const STEPS = 5;
 // E3 — Onboarding : langue parlée, langue apprise, partenaire (qui fixe l'accent), objectif, niveau.
 export default function OnboardingScreen() {
   const c = useColors();
-  const { profile, update } = useProfile();
+  const { profile, update, completeOnboarding, signOut } = useProfile();
   const [step, setStep] = useState(0);
   const [levelMode, setLevelMode] = useState<"test" | "declare" | null>(null);
   const [testDone, setTestDone] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
+  // Au premier écran, « Retour » déconnecte : l'onboarding est le seul chemin vers l'Accueil.
   const back = () => {
     if (testDone) setTestDone(false);
     else if (step > 0) setStep(step - 1);
-    else router.back();
+    else void signOut();
   };
 
-  const finish = () => router.replace("/home");
+  // Le profil complet part dans Supabase ; la navigation bascule alors seule vers l'Accueil.
+  const finish = async () => {
+    setSaving(true);
+    setError("");
+    const ok = await completeOnboarding();
+    setSaving(false);
+    if (!ok) setError("Ton profil n'a pas pu être enregistré. Vérifie ton réseau puis réessaie.");
+  };
 
   let content;
   let footer;
@@ -149,7 +158,11 @@ export default function OnboardingScreen() {
           }}
         />
       ) : (
-        <Button title="C'est parti !" disabled={levelMode !== "declare" || !profile.level} onPress={finish} />
+        <Button
+          title={saving ? "Enregistrement…" : "C'est parti !"}
+          disabled={saving || levelMode !== "declare" || !profile.level}
+          onPress={finish}
+        />
       );
   } else {
     content = (
@@ -168,7 +181,7 @@ export default function OnboardingScreen() {
         </Body>
       </>
     );
-    footer = <Button title="C'est parti !" onPress={finish} />;
+    footer = <Button title={saving ? "Enregistrement…" : "C'est parti !"} disabled={saving} onPress={finish} />;
   }
 
   const progress = Math.min(step + 1, STEPS) / STEPS;
@@ -185,6 +198,7 @@ export default function OnboardingScreen() {
         </Text>
       </View>
       {content}
+      {error ? <Text style={[styles.error, { color: c.danger }]}>{error}</Text> : null}
     </Screen>
   );
 }
@@ -206,4 +220,5 @@ const styles = StyleSheet.create({
   },
   result: { alignItems: "center", paddingVertical: 28 },
   level: { fontFamily: fonts.semibold, fontSize: 56 },
+  error: { fontFamily: fonts.medium, fontSize: 15 },
 });

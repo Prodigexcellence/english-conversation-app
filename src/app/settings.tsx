@@ -10,12 +10,12 @@ const LEVELS = (["A1", "A2", "B1", "B2", "C1", "C2"] as Level[]).map((l) => ({ v
 
 // E9 — Réglages
 export default function SettingsScreen() {
-  const { profile, update, reset } = useProfile();
+  const { profile, update, saveError, signOut, deleteAccount: deleteMyAccount } = useProfile();
 
+  // La navigation renvoie seule vers la Bienvenue dès que la session disparaît.
   const logout = () => {
-    reset();
     if (router.canDismiss()) router.dismissAll();
-    router.replace("/welcome");
+    void signOut();
   };
 
   const deleteAccount = () =>
@@ -24,7 +24,15 @@ export default function SettingsScreen() {
       "Ton profil, tes conversations et tes bilans seront effacés définitivement. Cette action est irréversible.",
       [
         { text: "Annuler", style: "cancel" },
-        { text: "Supprimer", style: "destructive", onPress: logout },
+        {
+          text: "Supprimer",
+          style: "destructive",
+          onPress: async () => {
+            if (router.canDismiss()) router.dismissAll();
+            const ok = await deleteMyAccount();
+            if (!ok) Alert.alert("Suppression impossible", "Vérifie ton réseau puis réessaie.");
+          },
+        },
       ],
     );
 
@@ -80,7 +88,7 @@ export default function SettingsScreen() {
         <Button title="Me déconnecter" variant="secondary" onPress={logout} />
         <Button title="Supprimer mon compte" variant="danger" onPress={deleteAccount} />
       </Card>
-      <Body muted>Maquette : les réglages sont gardés le temps de la visite, puis remis à zéro.</Body>
+      {saveError ? <Body>{saveError}</Body> : <Body muted>Tes réglages sont enregistrés automatiquement.</Body>}
       <View style={styles.bottom} />
     </Screen>
   );
