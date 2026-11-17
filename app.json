@@ -1,25 +1,54 @@
 {
   "expo": {
-    "name": "english-conversation-app",
+    "name": "New Language",
     "slug": "english-conversation-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "ios": {
-      "supportsTablet": true
-    },
+    "icon": "./assets/images/icon.png",
+    "scheme": "englishconversation",
+    "userInterfaceStyle": "automatic",
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "backgroundColor": "#8FB0FA",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "output": "server",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#F1F3F6",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 140,
+          "dark": {
+            "backgroundColor": "#12161D",
+            "image": "./assets/images/splash-icon.png"
+          }
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "owner": "prodigexcellences-team",
+    "extra": {
+      "eas": {
+        "projectId": "ea881a42-d033-4081-b16f-9bd946d08525"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/ea881a42-d033-4081-b16f-9bd946d08525"
     }
   }
 }
