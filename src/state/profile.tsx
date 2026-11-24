@@ -2,6 +2,9 @@ import { createContext, type ReactNode, useCallback, useContext, useEffect, useS
 
 import type { Correction } from "@/data/demoConversation";
 import { type Partner, partners } from "@/data/partners";
+// Importé depuis `languages` et non depuis `@/i18n` : `@/i18n` lit ce fichier,
+// l'importer en retour créerait une boucle.
+import { isLanguage, type Language } from "@/i18n/languages";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/state/auth";
 
@@ -11,6 +14,9 @@ export type VoiceSpeed = "lente" | "normale" | "rapide";
 export type InputMode = "voix" | "texte";
 
 export type Profile = {
+  // Langue maternelle : décide de la langue de l'interface et, plus tard, de celle dans
+  // laquelle l'IA explique les fautes. `null` = pas encore choisie, on suit l'appareil.
+  nativeLanguage: Language | null;
   // L'accent se déduit du partenaire (voir `partners`) ; il est recopié en base pour le serveur.
   partnerId: Partner["id"];
   goal: Goal | null;
@@ -25,6 +31,7 @@ export type Profile = {
 export type SessionSummary = { durationSec: number; corrections: Correction[]; userTurns: number };
 
 const defaultProfile: Profile = {
+  nativeLanguage: null,
   partnerId: "leo",
   goal: null,
   goalNote: "",
@@ -36,6 +43,9 @@ const defaultProfile: Profile = {
 
 // Ligne de la table `profiles` (supabase/migrations).
 type ProfileRow = {
+  // Texte libre en base : une langue retirée de l'app ne doit pas casser la lecture,
+  // d'où le passage par `isLanguage` dans `fromRow`.
+  native_language: string | null;
   partner_id: Partner["id"];
   accent: "us" | "uk";
   goal: Goal | null;
@@ -47,10 +57,12 @@ type ProfileRow = {
   onboarded_at: string | null;
 };
 
-const COLUMNS = "partner_id, accent, goal, goal_note, level, level_source, voice_speed, default_input, onboarded_at";
+const COLUMNS =
+  "native_language, partner_id, accent, goal, goal_note, level, level_source, voice_speed, default_input, onboarded_at";
 
 function fromRow(row: ProfileRow): Profile {
   return {
+    nativeLanguage: isLanguage(row.native_language) ? row.native_language : null,
     partnerId: row.partner_id,
     goal: row.goal,
     goalNote: row.goal_note,
@@ -63,6 +75,7 @@ function fromRow(row: ProfileRow): Profile {
 
 function toRow(patch: Partial<Profile>): Partial<ProfileRow> {
   const row: Partial<ProfileRow> = {};
+  if (patch.nativeLanguage !== undefined) row.native_language = patch.nativeLanguage;
   if (patch.partnerId !== undefined) {
     row.partner_id = patch.partnerId;
     row.accent = partners.find((p) => p.id === patch.partnerId)?.accent ?? "us";
@@ -81,8 +94,9 @@ type Store = {
   // « loading » : lecture du profil en cours ; « error » : lecture impossible (réseau).
   status: "idle" | "loading" | "ready" | "error";
   onboarded: boolean;
-  // Dernière erreur d'enregistrement, affichée à l'écran tant qu'elle n'est pas corrigée.
-  saveError: string | null;
+  // Vrai si le dernier enregistrement a échoué. C'est un drapeau, pas un message :
+  // le texte est traduit au moment de l'affichage, dans la langue de l'utilisateur.
+  saveError: boolean;
   update: (patch: Partial<Profile>) => void;
   completeOnboarding: () => Promise<boolean>;
   reload: () => void;
@@ -93,8 +107,6 @@ type Store = {
 };
 
 const ProfileContext = createContext<Store | null>(null);
-
-const SAVE_ERROR = "Ton choix n'a pas pu être enregistré. Vérifie ton réseau puis réessaie.";
 
 // Un état neuf par compte : à la déconnexion (ou changement de compte), tout repart de zéro.
 export function ProfileProvider({ children }: { children: ReactNode }) {
@@ -111,7 +123,7 @@ function ProfileStore({ userId, children }: { userId: string | null; children: R
   const [profile, setProfile] = useState<Profile>(defaultProfile);
   const [status, setStatus] = useState<Store["status"]>(userId ? "loading" : "idle");
   const [onboarded, setOnboarded] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState(false);
   const [lastSession, setLastSession] = useState<SessionSummary | null>(null);
   const [attempt, setAttempt] = useState(0);
 
@@ -143,7 +155,7 @@ function ProfileStore({ userId, children }: { userId: string | null; children: R
     async (row: Partial<ProfileRow>) => {
       if (!userId) return false;
       const { error } = await supabase.from("profiles").update(row).eq("id", userId);
-      setSaveError(error ? SAVE_ERROR : null);
+      setSaveError(Boolean(error));
       return !error;
     },
     [userId],

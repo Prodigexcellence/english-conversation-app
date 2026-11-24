@@ -4,26 +4,24 @@ import { StyleSheet, Text, View } from "react-native";
 
 import { Body, Button, Card, Label, Screen, Title } from "@/components/ui";
 import { partners } from "@/data/partners";
+import { type Translations, useT } from "@/i18n";
 import { useProfile } from "@/state/profile";
 import { fonts, useColors } from "@/theme";
 
-// Exemples tant que l'IA ne produit pas le vrai bilan (étape 7).
-const DEMO_TOPICS = ["Ton week-end", "Le cinéma", "Les films comiques"];
-const DEMO_WORDS = [
-  { en: "hilarious", fr: "hilarant, très drôle" },
-  { en: "to recommend", fr: "recommander, conseiller" },
-  { en: "funniest", fr: "le plus drôle" },
-];
+// Les sujets et les mots d'exemple vivent dans `src/i18n` : ils seront remplacés par
+// le vrai bilan produit par l'IA (étape 7).
 
-function formatDuration(sec: number) {
+function formatDuration(sec: number, t: Translations) {
   const m = Math.floor(sec / 60);
   const s = sec % 60;
-  return m > 0 ? `${m} min ${s.toString().padStart(2, "0")} s` : `${s} s`;
+  const { minutesShort, secondsShort } = t.summary;
+  return m > 0 ? `${m} ${minutesShort} ${s.toString().padStart(2, "0")} ${secondsShort}` : `${s} ${secondsShort}`;
 }
 
 // E7 — Bilan de séance
 export default function SummaryScreen() {
   const c = useColors();
+  const t = useT();
   const { lastSession, profile } = useProfile();
   const partner = partners.find((p) => p.id === profile.partnerId) ?? partners[0];
   const corrections = lastSession?.corrections ?? [];
@@ -32,40 +30,42 @@ export default function SummaryScreen() {
     <Screen
       footer={
         <>
-          <Button title={`Reparler avec ${partner.name}`} onPress={() => router.replace("/conversation")} />
-          <Button title="Retour à l'accueil" variant="secondary" onPress={() => router.dismissTo("/home")} />
+          <Button title={t.summary.speakAgain(partner.name)} onPress={() => router.replace("/conversation")} />
+          <Button title={t.summary.backHome} variant="secondary" onPress={() => router.dismissTo("/home")} />
         </>
       }
     >
       <View style={styles.top}>
-        <Title>Bien joué !</Title>
-        <Body muted>Voici ce que tu retiens de cette séance.</Body>
+        <Title>{t.summary.title}</Title>
+        <Body muted>{t.summary.body}</Body>
       </View>
 
       <View style={styles.stats}>
         <Card style={styles.stat}>
-          <Text style={[styles.statValue, { color: c.primary }]}>{formatDuration(lastSession?.durationSec ?? 0)}</Text>
-          <Text style={[styles.statLabel, { color: c.textMuted }]}>de conversation</Text>
+          <Text style={[styles.statValue, { color: c.primary }]}>
+            {formatDuration(lastSession?.durationSec ?? 0, t)}
+          </Text>
+          <Text style={[styles.statLabel, { color: c.textMuted }]}>{t.summary.ofConversation}</Text>
         </Card>
         <Card style={styles.stat}>
           <Text style={[styles.statValue, { color: c.primary }]}>{lastSession?.userTurns ?? 0}</Text>
-          <Text style={[styles.statLabel, { color: c.textMuted }]}>réponses en anglais</Text>
+          <Text style={[styles.statLabel, { color: c.textMuted }]}>{t.summary.answers}</Text>
         </Card>
       </View>
 
-      <Label>Sujets abordés</Label>
+      <Label>{t.summary.topics}</Label>
       <View style={styles.tags}>
-        {DEMO_TOPICS.map((t) => (
-          <Text key={t} style={[styles.tag, { backgroundColor: c.aiBubble, color: c.text }]}>
-            {t}
+        {t.summary.demoTopics.map((topic) => (
+          <Text key={topic} style={[styles.tag, { backgroundColor: c.aiBubble, color: c.text }]}>
+            {topic}
           </Text>
         ))}
       </View>
 
-      <Label>Corrections à retenir</Label>
+      <Label>{t.summary.corrections}</Label>
       <Card>
         {corrections.length === 0 ? (
-          <Body muted>Aucune correction cette fois : bravo, ou parle un peu plus longtemps la prochaine fois !</Body>
+          <Body muted>{t.summary.noCorrections}</Body>
         ) : (
           corrections.map((k, i) => (
             <View key={i} style={styles.correction}>
@@ -84,16 +84,16 @@ export default function SummaryScreen() {
         )}
       </Card>
 
-      <Label>Mots nouveaux</Label>
+      <Label>{t.summary.newWords}</Label>
       <Card>
-        {DEMO_WORDS.map((w) => (
+        {t.summary.demoWords.map((w) => (
           <View key={w.en} style={styles.word}>
             <Text style={[styles.wordEn, { color: c.text }]}>{w.en}</Text>
-            <Text style={[styles.wordFr, { color: c.textMuted }]}>{w.fr}</Text>
+            <Text style={[styles.wordFr, { color: c.textMuted }]}>{w.translation}</Text>
           </View>
         ))}
       </Card>
-      <Body muted>Maquette : les sujets et les mots sont des exemples. Les corrections viennent de ta séance.</Body>
+      <Body muted>{t.summary.mock}</Body>
     </Screen>
   );
 }

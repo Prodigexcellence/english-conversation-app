@@ -4,6 +4,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 
 import { Body, Button, Screen, Title } from "@/components/ui";
+import { I18nProvider, useT } from "@/i18n";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { AuthProvider, useAuth } from "@/state/auth";
 import { ProfileProvider, useProfile } from "@/state/profile";
@@ -20,7 +21,10 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <ProfileProvider>
-        <RootStack />
+        {/* La langue dépend du profil : I18nProvider se place donc sous ProfileProvider. */}
+        <I18nProvider>
+          <RootStack />
+        </I18nProvider>
       </ProfileProvider>
     </AuthProvider>
   );
@@ -29,6 +33,7 @@ export default function RootLayout() {
 // Trois états, trois groupes d'écrans : déconnecté, onboarding à faire, prêt à converser.
 // Un écran hors de son groupe est inaccessible : l'app renvoie vers `index`, qui aiguille.
 function RootStack() {
+  const t = useT();
   const { session, loading, recovering } = useAuth();
   const { status, onboarded, reload } = useProfile();
   const signedIn = Boolean(session) && !recovering;
@@ -41,11 +46,8 @@ function RootStack() {
   if (!isSupabaseConfigured) {
     return (
       <Screen>
-        <Title>Configuration manquante</Title>
-        <Body muted>
-          L&apos;adresse du serveur Supabase n&apos;est pas renseignée dans cette version de l&apos;app
-          (EXPO_PUBLIC_SUPABASE_URL et EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY).
-        </Body>
+        <Title>{t.layout.missingConfigTitle}</Title>
+        <Body muted>{t.layout.missingConfigBody}</Body>
       </Screen>
     );
   }
@@ -55,9 +57,9 @@ function RootStack() {
 
   if (signedIn && status === "error") {
     return (
-      <Screen footer={<Button title="Réessayer" onPress={reload} />}>
-        <Title>Connexion impossible</Title>
-        <Body muted>Ton profil n&apos;a pas pu être chargé. Vérifie ton réseau puis réessaie.</Body>
+      <Screen footer={<Button title={t.common.retry} onPress={reload} />}>
+        <Title>{t.layout.loadErrorTitle}</Title>
+        <Body muted>{t.layout.loadErrorBody}</Body>
       </Screen>
     );
   }

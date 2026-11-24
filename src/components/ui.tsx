@@ -4,6 +4,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View, type ViewStyle } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { useT } from "@/i18n";
 import { type Colors, fonts, useColors } from "@/theme";
 
 // Briques communes aux écrans de la maquette, toutes tirées de la charte.
@@ -95,11 +96,12 @@ export function Button({
 
 export function BackButton({ onPress }: { onPress?: () => void }) {
   const c = useColors();
+  const t = useT();
   return (
     <Pressable
       onPress={onPress ?? (() => router.back())}
       accessibilityRole="button"
-      accessibilityLabel="Retour"
+      accessibilityLabel={t.common.back}
       hitSlop={8}
       style={({ pressed }) => [styles(c).iconButton, pressed && { opacity: 0.5 }]}
     >
@@ -148,6 +150,7 @@ export function Option({
   left?: ReactNode;
 }) {
   const c = useColors();
+  const t = useT();
   const s = styles(c);
   return (
     <Pressable
@@ -167,7 +170,7 @@ export function Option({
         <Text style={s.optionTitle}>{title}</Text>
         {subtitle ? <Text style={s.optionSubtitle}>{subtitle}</Text> : null}
       </View>
-      {soon ? <Text style={s.soon}>Bientôt</Text> : null}
+      {soon ? <Text style={s.soon}>{t.common.soon}</Text> : null}
       {selected ? (
         <SymbolView name={{ ios: "checkmark.circle.fill", android: "check_circle", web: "check_circle" }} size={22} tintColor={c.primary} />
       ) : null}

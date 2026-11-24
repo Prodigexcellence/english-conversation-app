@@ -42,6 +42,4 @@ export const partners: Partner[] = [
   },
 ];
 
-export function accentLabel(accent: Accent) {
-  return accent === "uk" ? "britannique" : "américain";
-}
+// Le nom de l'accent est traduit : voir `t.accents[accent]` dans `src/i18n`.

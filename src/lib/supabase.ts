@@ -2,6 +2,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createClient } from "@supabase/supabase-js";
 import { AppState, Platform } from "react-native";
 
+import type { Translations } from "@/i18n/fr";
+
 // L'URL du projet et la clé publique ne sont pas secrètes : elles sont faites pour être dans l'app.
 // La clé API de l'IA, elle, ne vit que dans les secrets Supabase (cahier des charges, section 4).
 const url = process.env.EXPO_PUBLIC_SUPABASE_URL ?? "";
@@ -27,23 +29,23 @@ if (Platform.OS !== "web") {
   });
 }
 
-// Messages d'erreur clairs, en français, pour les cas courants.
-export function frenchAuthError(error: unknown): string {
+// Traduit les erreurs de Supabase Auth en un message clair, dans la langue de
+// l'utilisateur. Les textes vivent dans `src/i18n` ; ici on ne fait que reconnaître
+// le cas. `import type` est effacé à la compilation : aucune boucle d'imports.
+export function authErrorMessage(error: unknown, t: Translations): string {
   const e = error as { code?: string; message?: string; status?: number; name?: string } | null;
   const code = e?.code ?? "";
   const message = e?.message ?? "";
-  if (code === "invalid_credentials") return "E-mail ou mot de passe incorrect.";
-  if (code === "user_already_exists" || code === "email_exists")
-    return "Un compte existe déjà avec cette adresse. Utilise « Connexion ».";
-  if (code === "email_not_confirmed") return "Confirme d'abord ton adresse avec le code reçu par e-mail.";
-  if (code === "weak_password") return "Mot de passe trop faible : 8 caractères minimum.";
-  if (code === "same_password") return "Choisis un mot de passe différent de l'ancien.";
-  if (code === "otp_expired" || /expired|invalid.*(otp|token)/i.test(message))
-    return "Ce code n'est pas bon ou a expiré. Demande un nouveau code.";
+  const m = t.authErrors;
+  if (code === "invalid_credentials") return m.invalidCredentials;
+  if (code === "user_already_exists" || code === "email_exists") return m.userExists;
+  if (code === "email_not_confirmed") return m.emailNotConfirmed;
+  if (code === "weak_password") return m.weakPassword;
+  if (code === "same_password") return m.samePassword;
+  if (code === "otp_expired" || /expired|invalid.*(otp|token)/i.test(message)) return m.otpExpired;
   if (code === "over_email_send_rate_limit" || code === "over_request_rate_limit" || e?.status === 429)
-    return "Trop de tentatives. Patiente quelques minutes puis réessaie.";
-  if (code === "email_address_invalid") return "Cette adresse e-mail n'est pas acceptée.";
-  if (e?.name === "AuthRetryableFetchError" || /network|fetch/i.test(message))
-    return "Connexion impossible. Vérifie ton réseau puis réessaie.";
-  return "Une erreur est survenue. Réessaie dans un instant.";
+    return m.rateLimit;
+  if (code === "email_address_invalid") return m.emailInvalid;
+  if (e?.name === "AuthRetryableFetchError" || /network|fetch/i.test(message)) return m.network;
+  return m.generic;
 }

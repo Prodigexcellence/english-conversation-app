@@ -4,7 +4,8 @@ import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
 import { Body, Card, IconButton, Screen, Title } from "@/components/ui";
-import { accentLabel, partners } from "@/data/partners";
+import { partners } from "@/data/partners";
+import { useT } from "@/i18n";
 import { useProfile } from "@/state/profile";
 import { fonts, useColors } from "@/theme";
 
@@ -13,6 +14,7 @@ const DAILY_MINUTES = 30;
 // E4 — Accueil : Converser (actif) et Apprendre (bientôt).
 export default function HomeScreen() {
   const c = useColors();
+  const t = useT();
   const { profile, lastSession } = useProfile();
   const partner = partners.find((p) => p.id === profile.partnerId) ?? partners[0];
   const usedMinutes = Math.min(DAILY_MINUTES, Math.ceil((lastSession?.durationSec ?? 0) / 60));
@@ -26,12 +28,12 @@ export default function HomeScreen() {
     <Screen fill>
       <View style={styles.top}>
         <View style={{ flex: 1 }}>
-          <Title>Bonjour !</Title>
-          <Body muted>Prêt à parler anglais ?</Body>
+          <Title>{t.home.greeting}</Title>
+          <Body muted>{t.home.subtitle}</Body>
         </View>
         <IconButton
           name={{ ios: "gearshape", android: "settings", web: "settings" }}
-          label="Réglages"
+          label={t.home.settings}
           onPress={() => router.push("/settings")}
         />
       </View>
@@ -41,7 +43,7 @@ export default function HomeScreen() {
           <Pressable
             onPress={() => router.push("/conversation")}
             accessibilityRole="button"
-            accessibilityLabel={`Converser avec ${partner.name}`}
+            accessibilityLabel={t.home.converseWith(partner.name)}
             style={({ pressed }) => [styles.card, { backgroundColor: c.primary }, pressed && { opacity: 0.85 }]}
           >
             <View style={styles.cardTop}>
@@ -50,14 +52,14 @@ export default function HomeScreen() {
               </View>
             </View>
             <Text style={[styles.cardTitle, { color: c.onPrimary, fontSize: titleSize, lineHeight: titleSize + 6 }]} numberOfLines={1} adjustsFontSizeToFit>
-              Converser
+              {t.home.converse}
             </Text>
-            <Text style={[styles.cardSubtitle, { color: c.onPrimary }]}>Parler avec {partner.name}</Text>
-            <Text style={[styles.cardText, { color: c.onPrimary }]}>Il lance la conversation, toi tu réponds à voix haute.</Text>
+            <Text style={[styles.cardSubtitle, { color: c.onPrimary }]}>{t.home.converseWith(partner.name)}</Text>
+            <Text style={[styles.cardText, { color: c.onPrimary }]}>{t.home.converseDesc}</Text>
             <View style={styles.spacer} />
             <View style={[styles.go, { backgroundColor: c.onPrimary }]}>
               <SymbolView name={{ ios: "mic.fill", android: "mic", web: "mic" }} size={18} tintColor={c.primary} />
-              <Text style={[styles.goText, { color: c.primary }]}>Commencer</Text>
+              <Text style={[styles.goText, { color: c.primary }]}>{t.home.start}</Text>
             </View>
           </Pressable>
 
@@ -66,31 +68,25 @@ export default function HomeScreen() {
             accessibilityState={{ disabled: true }}
           >
             <View style={styles.cardTop}>
-              <Text style={[styles.soon, { backgroundColor: c.field, color: c.textMuted }]}>Bientôt</Text>
+              <Text style={[styles.soon, { backgroundColor: c.field, color: c.textMuted }]}>{t.common.soon}</Text>
             </View>
             <Text style={[styles.cardTitle, { color: c.text, fontSize: titleSize, lineHeight: titleSize + 6 }]} numberOfLines={1} adjustsFontSizeToFit>
-              Apprendre
+              {t.home.learn}
             </Text>
-            <Text style={[styles.cardSubtitle, { color: c.text }]}>Cours avec ton professeur</Text>
-            <Text style={[styles.cardText, { color: c.textMuted }]}>
-              Un programme qui avance selon ton niveau : grammaire, orthographe, lexique…
-            </Text>
+            <Text style={[styles.cardSubtitle, { color: c.text }]}>{t.home.learnSubtitle}</Text>
+            <Text style={[styles.cardText, { color: c.textMuted }]}>{t.home.learnDesc}</Text>
           </View>
         </View>
 
         <Card>
           <View style={styles.row}>
-            <Text style={[styles.progressTitle, { color: c.text }]}>Aujourd&apos;hui</Text>
-            <Text style={[styles.cardValue, { color: c.textMuted }]}>
-              {left} min restantes sur {DAILY_MINUTES}
-            </Text>
+            <Text style={[styles.progressTitle, { color: c.text }]}>{t.home.today}</Text>
+            <Text style={[styles.cardValue, { color: c.textMuted }]}>{t.home.minutesLeft(left, DAILY_MINUTES)}</Text>
           </View>
           <View style={[styles.track, { backgroundColor: c.field }]}>
             <View style={[styles.bar, { backgroundColor: c.primary, width: `${(usedMinutes / DAILY_MINUTES) * 100}%` }]} />
           </View>
-          <Body muted>
-            Niveau {profile.level ?? "non défini"} · accent {accentLabel(partner.accent)}
-          </Body>
+          <Body muted>{t.home.levelAndAccent(profile.level ?? t.home.levelUnset, t.accents[partner.accent])}</Body>
         </Card>
       </View>
     </Screen>

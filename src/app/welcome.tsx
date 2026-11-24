@@ -4,18 +4,23 @@ import { StyleSheet, Text, View } from "react-native";
 
 import { Body, Button, Screen } from "@/components/ui";
 import { partners } from "@/data/partners";
+import { useT } from "@/i18n";
 import { fonts, useColors } from "@/theme";
 
 // E1 — Bienvenue
 export default function WelcomeScreen() {
   const c = useColors();
+  const t = useT();
   return (
     <Screen
       footer={
         <>
-          <Button title="Créer un compte" onPress={() => router.push({ pathname: "/auth", params: { mode: "signup" } })} />
           <Button
-            title="J'ai déjà un compte"
+            title={t.welcome.createAccount}
+            onPress={() => router.push({ pathname: "/auth", params: { mode: "signup" } })}
+          />
+          <Button
+            title={t.welcome.haveAccount}
             variant="secondary"
             onPress={() => router.push({ pathname: "/auth", params: { mode: "login" } })}
           />
@@ -34,21 +39,21 @@ export default function WelcomeScreen() {
           ))}
         </View>
         <View style={[styles.bubble, { backgroundColor: c.surface, borderColor: c.border }]}>
-          <Text style={[styles.bubbleText, { color: c.text }]}>Hi! Shall we talk?</Text>
+          <Text style={[styles.bubbleText, { color: c.text }]}>{t.welcome.bubble}</Text>
         </View>
         <View style={styles.lockup}>
           <Image
             source={require("@/assets/images/logo.png")}
             style={styles.logo}
             contentFit="contain"
-            accessibilityLabel="Logo New Language"
+            accessibilityLabel={t.welcome.logoAlt}
           />
           <Text style={[styles.brand, { color: c.text }]} accessibilityRole="header">
             <Text style={{ color: c.primary }}>New</Text> Language
           </Text>
         </View>
         <Body muted center>
-          Parle anglais avec un partenaire patient. Il lance la conversation, relance toujours et corrige en douceur.
+          {t.welcome.tagline}
         </Body>
       </View>
     </Screen>

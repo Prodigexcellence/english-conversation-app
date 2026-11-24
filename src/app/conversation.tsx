@@ -19,20 +19,25 @@ import { PartnerAvatar, type PartnerState } from "@/components/PartnerAvatar";
 import { BackButton } from "@/components/ui";
 import { type AiTurn, type Correction, demoAiTurns, demoUserLines, openingLine } from "@/data/demoConversation";
 import { partners } from "@/data/partners";
+import { type Translations, useT } from "@/i18n";
 import { useProfile } from "@/state/profile";
 import { type Colors, fonts, useColors } from "@/theme";
 
 type Message = { id: number; role: "ai" | "user"; text: string; correction?: Correction };
 
-const STATUS: Record<PartnerState, string> = {
-  idle: "à toi de parler",
-  listening: "t'écoute…",
-  thinking: "réfléchit…",
-  speaking: "parle…",
-};
+function statusLabel(t: Translations, state: PartnerState): string {
+  const labels: Record<PartnerState, string> = {
+    idle: t.conversation.statusIdle,
+    listening: t.conversation.statusListening,
+    thinking: t.conversation.statusThinking,
+    speaking: t.conversation.statusSpeaking,
+  };
+  return labels[state];
+}
 
 export default function ConversationScreen() {
   const colors = useColors();
+  const t = useT();
   const s = makeStyles(colors);
   const { width, height } = useWindowDimensions();
   const avatarSize = Math.min(width * 0.36, height * 0.17, 200);
@@ -113,7 +118,7 @@ export default function ConversationScreen() {
     if (phaseRef.current !== "listening") return;
     if (Date.now() - pressStart.current < 350) {
       setPhase("idle");
-      setHint("Garde le doigt sur le micro pendant que tu parles.");
+      setHint(t.conversation.hintTooShort);
       return;
     }
     push({ role: "user", text: demoUserLines[takeNext(userIndex) % demoUserLines.length] });
@@ -149,10 +154,10 @@ export default function ConversationScreen() {
               <Text style={s.name} accessibilityRole="header">
                 {partner.name}
               </Text>
-              <Text style={s.status}>{STATUS[phase]}</Text>
+              <Text style={s.status}>{statusLabel(t, phase)}</Text>
             </View>
             <Pressable onPress={onEnd} style={({ pressed }) => [s.endButton, pressed && s.pressed]} accessibilityRole="button">
-              <Text style={s.endText}>Terminer</Text>
+              <Text style={s.endText}>{t.conversation.end}</Text>
             </Pressable>
           </View>
 
@@ -181,8 +186,9 @@ export default function ConversationScreen() {
                           tintColor={colors.primary}
                         />
                         <Text style={s.correctionText}>
-                          On dit <Text style={s.correctionStrong}>{m.correction.better}</Text> plutôt que{" "}
-                          {m.correction.said}
+                          {t.conversation.correctionSay}{" "}
+                          <Text style={s.correctionStrong}>{m.correction.better}</Text>{" "}
+                          {t.conversation.correctionRatherThan} {m.correction.said}
                         </Text>
                       </View>
                     ) : null}
@@ -195,7 +201,7 @@ export default function ConversationScreen() {
               )}
               {phase === "listening" ? (
                 <View style={[s.bubble, s.userBubble, s.listeningBubble]}>
-                  <Text style={s.userText}>Je t&apos;écoute…</Text>
+                  <Text style={s.userText}>{t.conversation.listening}</Text>
                 </View>
               ) : null}
             </ScrollView>
@@ -206,11 +212,11 @@ export default function ConversationScreen() {
               value={draft}
               onChangeText={setDraft}
               onSubmitEditing={onSend}
-              placeholder="Écrire en anglais…"
+              placeholder={t.conversation.inputPlaceholder}
               placeholderTextColor={colors.textMuted}
               style={s.input}
               returnKeyType="send"
-              accessibilityLabel="Écrire un message"
+              accessibilityLabel={t.conversation.writeLabel}
             />
             {draft.trim() ? (
               <Pressable
@@ -218,7 +224,7 @@ export default function ConversationScreen() {
                 disabled={busy}
                 style={({ pressed }) => [s.roundButton, s.sendButton, (pressed || busy) && s.pressed]}
                 accessibilityRole="button"
-                accessibilityLabel="Envoyer"
+                accessibilityLabel={t.conversation.send}
               >
                 <SymbolView name={{ ios: "arrow.up", android: "arrow_upward", web: "arrow_upward" }} size={22} tintColor={colors.onPrimary} />
               </Pressable>
@@ -229,13 +235,13 @@ export default function ConversationScreen() {
                 disabled={busy}
                 style={[s.roundButton, s.micButton, phase === "listening" && s.micActive, busy && s.pressed]}
                 accessibilityRole="button"
-                accessibilityLabel="Maintenir pour parler"
+                accessibilityLabel={t.conversation.holdToSpeak}
               >
                 <SymbolView name={{ ios: "mic.fill", android: "mic", web: "mic" }} size={28} tintColor={colors.onPrimary} />
               </Pressable>
             )}
           </View>
-          <Text style={s.hint}>{hint || (busy ? " " : "Maintiens le micro pour parler, ou écris ta réponse.")}</Text>
+          <Text style={s.hint}>{hint || (busy ? " " : t.conversation.hintDefault)}</Text>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>

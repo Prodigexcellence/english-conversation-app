@@ -3,7 +3,8 @@ import { useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { BackButton, Body, Button, Chips, Screen, Title } from "@/components/ui";
-import { frenchAuthError, supabase } from "@/lib/supabase";
+import { useT } from "@/i18n";
+import { authErrorMessage, supabase } from "@/lib/supabase";
 import { useAuth } from "@/state/auth";
 import { fonts, useColors } from "@/theme";
 
@@ -18,6 +19,7 @@ const CODE = /^\d{6,10}$/;
 // aucun lien à ouvrir, ce qui fonctionne aussi dans Expo Go.
 export default function AuthScreen() {
   const c = useColors();
+  const t = useT();
   const { setRecovering } = useAuth();
   const params = useLocalSearchParams<{ mode?: Mode }>();
   const [mode, setMode] = useState<Mode>(params.mode === "login" ? "login" : "signup");
@@ -42,7 +44,7 @@ export default function AuthScreen() {
     try {
       await action();
     } catch (e) {
-      setError(frenchAuthError(e));
+      setError(authErrorMessage(e, t));
     } finally {
       setBusy(false);
     }
@@ -52,19 +54,19 @@ export default function AuthScreen() {
 
   const checkEmail = () => {
     if (EMAIL.test(cleanEmail)) return true;
-    setError("Saisis une adresse e-mail valide, par exemple prenom@exemple.fr.");
+    setError(t.auth.invalidEmail);
     return false;
   };
 
   const checkPassword = () => {
     if (password.length >= 8) return true;
-    setError("Choisis un mot de passe d'au moins 8 caractères.");
+    setError(t.auth.shortPassword);
     return false;
   };
 
   const checkCode = () => {
     if (CODE.test(code.trim())) return true;
-    setError("Saisis le code à chiffres reçu par e-mail.");
+    setError(t.auth.invalidCode);
     return false;
   };
 
@@ -75,25 +77,25 @@ export default function AuthScreen() {
       if (error) throw error;
       // Adresse déjà inscrite et confirmée : Supabase ne le dit pas par une erreur, par prudence.
       if (data.user && data.user.identities?.length === 0) {
-        setError("Un compte existe déjà avec cette adresse. Utilise « Connexion ».");
+        setError(t.authErrors.userExists);
         return;
       }
       // Sans session, l'adresse doit d'abord être confirmée par le code reçu.
-      if (!data.session) go("confirm", `Un code vient d'être envoyé à ${cleanEmail}.`);
+      if (!data.session) go("confirm", t.auth.codeSent(cleanEmail));
     });
   };
 
   const login = () => {
     if (!checkEmail()) return;
     if (!password) {
-      setError("Saisis ton mot de passe.");
+      setError(t.auth.missingPassword);
       return;
     }
     run(async () => {
       const { error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
       if (error?.code === "email_not_confirmed") {
         await supabase.auth.resend({ type: "signup", email: cleanEmail });
-        go("confirm", `Ton adresse n'est pas encore confirmée. Un nouveau code vient d'être envoyé à ${cleanEmail}.`);
+        go("confirm", t.auth.notConfirmed(cleanEmail));
         return;
       }
       if (error) throw error;
@@ -112,7 +114,7 @@ export default function AuthScreen() {
     run(async () => {
       const { error } = await supabase.auth.resend({ type: "signup", email: cleanEmail });
       if (error) throw error;
-      setInfo(`Nouveau code envoyé à ${cleanEmail}.`);
+      setInfo(t.auth.codeResent(cleanEmail));
     });
 
   const sendResetCode = () => {
@@ -121,7 +123,7 @@ export default function AuthScreen() {
       const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail);
       if (error) throw error;
       setPassword("");
-      go("reset", `Si un compte existe pour ${cleanEmail}, un code vient d'y être envoyé.`);
+      go("reset", t.auth.resetCodeSent(cleanEmail));
     });
   };
 
@@ -148,18 +150,18 @@ export default function AuthScreen() {
 
   const emailField = (
     <View style={styles.field}>
-      <Text style={[styles.label, { color: c.textMuted }]}>Adresse e-mail</Text>
+      <Text style={[styles.label, { color: c.textMuted }]}>{t.auth.emailLabel}</Text>
       <TextInput
         value={email}
         onChangeText={setEmail}
         style={input}
-        placeholder="prenom@exemple.fr"
+        placeholder={t.auth.emailPlaceholder}
         placeholderTextColor={c.textMuted}
         keyboardType="email-address"
         autoCapitalize="none"
         autoComplete="email"
         textContentType="emailAddress"
-        accessibilityLabel="Adresse e-mail"
+        accessibilityLabel={t.auth.emailLabel}
         editable={!busy}
       />
     </View>
@@ -172,7 +174,7 @@ export default function AuthScreen() {
         value={password}
         onChangeText={setPassword}
         style={input}
-        placeholder={mode === "login" ? "Ton mot de passe" : "8 caractères minimum"}
+        placeholder={mode === "login" ? t.auth.passwordPlaceholderLogin : t.auth.passwordPlaceholderSignup}
         placeholderTextColor={c.textMuted}
         secureTextEntry
         autoComplete={mode === "login" ? "current-password" : "new-password"}
@@ -186,19 +188,19 @@ export default function AuthScreen() {
 
   const codeField = (onSubmit: () => void) => (
     <View style={styles.field}>
-      <Text style={[styles.label, { color: c.textMuted }]}>Code reçu par e-mail</Text>
+      <Text style={[styles.label, { color: c.textMuted }]}>{t.auth.codeLabel}</Text>
       <TextInput
         value={code}
-        onChangeText={(t) => setCode(t.replace(/\D/g, ""))}
+        onChangeText={(typed) => setCode(typed.replace(/\D/g, ""))}
         style={[input, styles.code]}
-        placeholder="123456"
+        placeholder={t.auth.codePlaceholder}
         placeholderTextColor={c.textMuted}
         keyboardType="number-pad"
         autoComplete="one-time-code"
         textContentType="oneTimeCode"
         maxLength={10}
         onSubmitEditing={onSubmit}
-        accessibilityLabel="Code reçu par e-mail"
+        accessibilityLabel={t.auth.codeLabel}
         editable={!busy}
       />
     </View>
@@ -215,50 +217,52 @@ export default function AuthScreen() {
   let action: { title: string; onPress: () => void };
 
   if (mode === "signup" || mode === "login") {
-    title = mode === "signup" ? "Crée ton compte" : "Content de te revoir";
+    title = mode === "signup" ? t.auth.titleSignup : t.auth.titleLogin;
     action =
-      mode === "signup" ? { title: "Créer mon compte", onPress: signup } : { title: "Me connecter", onPress: login };
+      mode === "signup"
+        ? { title: t.auth.actionSignup, onPress: signup }
+        : { title: t.auth.actionLogin, onPress: login };
     content = (
       <>
         <Chips
           options={[
-            { value: "signup", label: "Inscription" },
-            { value: "login", label: "Connexion" },
+            { value: "signup", label: t.auth.tabSignup },
+            { value: "login", label: t.auth.tabLogin },
           ]}
           value={mode}
           onChange={(m) => go(m)}
         />
         {emailField}
-        {passwordField("Mot de passe", action.onPress)}
-        {mode === "login" ? link("Mot de passe oublié ?", () => go("forgot")) : null}
+        {passwordField(t.auth.passwordLabel, action.onPress)}
+        {mode === "login" ? link(t.auth.forgotLink, () => go("forgot")) : null}
       </>
     );
   } else if (mode === "confirm") {
-    title = "Confirme ton adresse";
-    action = { title: "Valider", onPress: confirm };
+    title = t.auth.confirmTitle;
+    action = { title: t.auth.confirmAction, onPress: confirm };
     content = (
       <>
         {codeField(confirm)}
-        {link("Renvoyer un code", resendSignupCode)}
+        {link(t.auth.resendLink, resendSignupCode)}
       </>
     );
   } else if (mode === "forgot") {
-    title = "Mot de passe oublié";
-    action = { title: "Recevoir un code", onPress: sendResetCode };
+    title = t.auth.forgotTitle;
+    action = { title: t.auth.forgotAction, onPress: sendResetCode };
     content = (
       <>
-        <Body muted>Saisis ton adresse : tu recevras un code pour choisir un nouveau mot de passe.</Body>
+        <Body muted>{t.auth.forgotIntro}</Body>
         {emailField}
       </>
     );
   } else {
-    title = "Nouveau mot de passe";
-    action = { title: "Changer mon mot de passe", onPress: reset };
+    title = t.auth.resetTitle;
+    action = { title: t.auth.resetAction, onPress: reset };
     content = (
       <>
         {codeField(reset)}
-        {passwordField("Nouveau mot de passe", reset)}
-        {link("Renvoyer un code", sendResetCode)}
+        {passwordField(t.auth.newPasswordLabel, reset)}
+        {link(t.auth.resendLink, sendResetCode)}
       </>
     );
   }
@@ -271,7 +275,7 @@ export default function AuthScreen() {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <Screen footer={<Button title={busy ? "Patiente…" : action.title} onPress={action.onPress} disabled={busy} />}>
+      <Screen footer={<Button title={busy ? t.common.pleaseWait : action.title} onPress={action.onPress} disabled={busy} />}>
         <View style={styles.top}>
           <BackButton onPress={back} />
         </View>

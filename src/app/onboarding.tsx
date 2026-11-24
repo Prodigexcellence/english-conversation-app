@@ -3,7 +3,8 @@ import { useState } from "react";
 import { StyleSheet, Text, TextInput, View } from "react-native";
 
 import { BackButton, Body, Button, Card, Chips, Label, Option, Screen, Title } from "@/components/ui";
-import { accentLabel, partners } from "@/data/partners";
+import { partners } from "@/data/partners";
+import { type Language, LANGUAGE_NAMES, PLANNED_LANGUAGES, type Translations, useI18n } from "@/i18n";
 import { type Goal, type Level, useProfile } from "@/state/profile";
 import { fonts, useColors } from "@/theme";
 
@@ -12,19 +13,25 @@ const LEVELS: { value: Level; label: string }[] = ["A1", "A2", "B1", "B2", "C1",
   label: l,
 }));
 
-const GOALS: { value: Goal; title: string; subtitle?: string }[] = [
-  { value: "travail", title: "Pour le travail", subtitle: "Réunions, appels, collègues étrangers" },
-  { value: "voyage", title: "Pour voyager", subtitle: "Hôtel, restaurant, aéroport, rencontres" },
-  { value: "examen", title: "Pour un examen", subtitle: "TOEIC, IELTS, Cambridge, oral de concours" },
-  { value: "plaisir", title: "Pour le plaisir", subtitle: "Films, séries, culture, amis" },
-  { value: "autre", title: "Autre" },
-];
+// Les langues traduites, dans l'ordre du catalogue.
+const UI_LANGUAGES = Object.keys(LANGUAGE_NAMES) as Language[];
+
+function goalOptions(t: Translations): { value: Goal; title: string; subtitle?: string }[] {
+  return [
+    { value: "travail", title: t.onboarding.goalWork, subtitle: t.onboarding.goalWorkSub },
+    { value: "voyage", title: t.onboarding.goalTravel, subtitle: t.onboarding.goalTravelSub },
+    { value: "examen", title: t.onboarding.goalExam, subtitle: t.onboarding.goalExamSub },
+    { value: "plaisir", title: t.onboarding.goalFun, subtitle: t.onboarding.goalFunSub },
+    { value: "autre", title: t.onboarding.goalOther },
+  ];
+}
 
 const STEPS = 5;
 
 // E3 — Onboarding : langue parlée, langue apprise, partenaire (qui fixe l'accent), objectif, niveau.
 export default function OnboardingScreen() {
   const c = useColors();
+  const { t, language } = useI18n();
   const { profile, update, completeOnboarding, signOut } = useProfile();
   const [step, setStep] = useState(0);
   const [levelMode, setLevelMode] = useState<"test" | "declare" | null>(null);
@@ -45,7 +52,7 @@ export default function OnboardingScreen() {
     setError("");
     const ok = await completeOnboarding();
     setSaving(false);
-    if (!ok) setError("Ton profil n'a pas pu être enregistré. Vérifie ton réseau puis réessaie.");
+    if (!ok) setError(t.onboarding.saveError);
   };
 
   let content;
@@ -54,35 +61,57 @@ export default function OnboardingScreen() {
   if (step === 0) {
     content = (
       <>
-        <Title>Quelle langue parles-tu ?</Title>
-        <Body muted>Ton partenaire t&apos;expliquera les choses dans cette langue quand ce sera utile.</Body>
-        <Option title="Français" selected />
-        <Option title="Español" soon />
-        <Option title="Deutsch" soon />
-        <Option title="Italiano" soon />
+        <Title>{t.onboarding.nativeTitle}</Title>
+        <Body muted>{t.onboarding.nativeBody}</Body>
+        {/* La langue de l'appareil est pré-sélectionnée : l'écran s'affiche déjà dans
+            la bonne langue avant que l'utilisateur ait touché à quoi que ce soit. */}
+        {UI_LANGUAGES.map((code) => (
+          <Option
+            key={code}
+            title={LANGUAGE_NAMES[code]}
+            selected={language === code}
+            onPress={() => update({ nativeLanguage: code })}
+          />
+        ))}
+        {PLANNED_LANGUAGES.map((name) => (
+          <Option key={name} title={name} soon />
+        ))}
       </>
     );
-    footer = <Button title="Continuer" onPress={() => setStep(1)} />;
+    // On enregistre même sans choix explicite, pour que la langue survive à un
+    // changement de réglages de l'appareil.
+    footer = (
+      <Button
+        title={t.common.continue}
+        onPress={() => {
+          update({ nativeLanguage: language });
+          setStep(1);
+        }}
+      />
+    );
   } else if (step === 1) {
     content = (
       <>
-        <Title>Quelle langue veux-tu apprendre ?</Title>
-        <Option title="Anglais" selected />
-        <Option title="Espagnol" soon />
-        <Option title="Mandarin (chinois)" soon />
+        <Title>{t.onboarding.targetTitle}</Title>
+        <Option title={t.onboarding.targetEnglish} selected />
+        <Option title={t.onboarding.targetSpanish} soon />
+        <Option title={t.onboarding.targetMandarin} soon />
       </>
     );
-    footer = <Button title="Continuer" onPress={() => setStep(2)} />;
+    footer = <Button title={t.common.continue} onPress={() => setStep(2)} />;
   } else if (step === 2) {
     content = (
       <>
-        <Title>Avec qui veux-tu parler ?</Title>
-        <Body muted>Tu pourras en changer à tout moment dans les réglages.</Body>
+        <Title>{t.onboarding.partnerTitle}</Title>
+        <Body muted>{t.onboarding.partnerBody}</Body>
         {partners.map((p) => (
           <Option
             key={p.id}
             title={p.name}
-            subtitle={`Accent ${accentLabel(p.accent)} · ${p.id === "leo" ? "Détendu et curieux" : "Chaleureux et encourageant"}`}
+            subtitle={t.onboarding.partnerSubtitle(
+              t.accents[p.accent],
+              p.id === "leo" ? t.onboarding.leoTrait : t.onboarding.marcusTrait,
+            )}
             selected={profile.partnerId === p.id}
             onPress={() => update({ partnerId: p.id })}
             left={
@@ -94,13 +123,13 @@ export default function OnboardingScreen() {
         ))}
       </>
     );
-    footer = <Button title="Continuer" onPress={() => setStep(3)} />;
+    footer = <Button title={t.common.continue} onPress={() => setStep(3)} />;
   } else if (step === 3) {
     content = (
       <>
-        <Title>Pourquoi apprends-tu l&apos;anglais ?</Title>
-        <Body muted>Ton partenaire choisira des sujets qui te serviront.</Body>
-        {GOALS.map((g) => (
+        <Title>{t.onboarding.goalTitle}</Title>
+        <Body muted>{t.onboarding.goalBody}</Body>
+        {goalOptions(t).map((g) => (
           <Option
             key={g.value}
             title={g.title}
@@ -113,37 +142,37 @@ export default function OnboardingScreen() {
           <TextInput
             value={profile.goalNote}
             onChangeText={(goalNote) => update({ goalNote })}
-            placeholder="Dis-nous pourquoi (facultatif)"
+            placeholder={t.onboarding.goalNotePlaceholder}
             placeholderTextColor={c.textMuted}
-            accessibilityLabel="Dis-nous pourquoi (facultatif)"
+            accessibilityLabel={t.onboarding.goalNotePlaceholder}
             style={[styles.input, { backgroundColor: c.surface, borderColor: c.border, color: c.text }]}
             multiline
           />
         ) : null}
       </>
     );
-    footer = <Button title="Continuer" disabled={!profile.goal} onPress={() => setStep(4)} />;
+    footer = <Button title={t.common.continue} disabled={!profile.goal} onPress={() => setStep(4)} />;
   } else if (!testDone) {
     content = (
       <>
-        <Title>Quel est ton niveau ?</Title>
+        <Title>{t.onboarding.levelTitle}</Title>
         <Option
-          title="Faire la conversation test"
-          subtitle="Environ 10 minutes. Ton partenaire discute avec toi et estime ton niveau."
+          title={t.onboarding.levelTestOption}
+          subtitle={t.onboarding.levelTestOptionSub}
           selected={levelMode === "test"}
           onPress={() => setLevelMode("test")}
         />
         <Option
-          title="Je connais déjà mon niveau"
-          subtitle="Sélectionne ici ton niveau. Tu pourras le changer dans les réglages."
+          title={t.onboarding.levelDeclareOption}
+          subtitle={t.onboarding.levelDeclareOptionSub}
           selected={levelMode === "declare"}
           onPress={() => setLevelMode("declare")}
         />
         {levelMode === "declare" ? (
           <>
-            <Label>Mon niveau</Label>
+            <Label>{t.onboarding.myLevel}</Label>
             <Chips options={LEVELS} value={profile.level} onChange={(level) => update({ level, levelSource: "declare" })} />
-            <Body muted>A1-A2 : débutant · B1-B2 : intermédiaire · C1-C2 : avancé</Body>
+            <Body muted>{t.onboarding.levelScale}</Body>
           </>
         ) : null}
       </>
@@ -151,7 +180,7 @@ export default function OnboardingScreen() {
     footer =
       levelMode === "test" ? (
         <Button
-          title="Commencer le test"
+          title={t.onboarding.startTest}
           onPress={() => {
             update({ level: "B1", levelSource: "test" });
             setTestDone(true);
@@ -159,7 +188,7 @@ export default function OnboardingScreen() {
         />
       ) : (
         <Button
-          title={saving ? "Enregistrement…" : "C'est parti !"}
+          title={saving ? t.common.saving : t.onboarding.finish}
           disabled={saving || levelMode !== "declare" || !profile.level}
           onPress={finish}
         />
@@ -167,21 +196,15 @@ export default function OnboardingScreen() {
   } else {
     content = (
       <>
-        <Title>Ton niveau estimé</Title>
+        <Title>{t.onboarding.resultTitle}</Title>
         <Card style={styles.result}>
           <Text style={[styles.level, { color: c.primary }]}>B1</Text>
-          <Body center>
-            Tu te fais comprendre sur des sujets du quotidien. Tes prochains progrès : les temps du passé et des phrases plus
-            longues.
-          </Body>
+          <Body center>{t.onboarding.resultBody}</Body>
         </Card>
-        <Body muted>
-          Maquette : la conversation test n&apos;existe pas encore, ce résultat est un exemple. Tu pourras changer ton niveau
-          dans les réglages.
-        </Body>
+        <Body muted>{t.onboarding.resultMock}</Body>
       </>
     );
-    footer = <Button title={saving ? "Enregistrement…" : "C'est parti !"} disabled={saving} onPress={finish} />;
+    footer = <Button title={saving ? t.common.saving : t.onboarding.finish} disabled={saving} onPress={finish} />;
   }
 
   const progress = Math.min(step + 1, STEPS) / STEPS;
