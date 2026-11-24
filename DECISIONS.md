@@ -23,6 +23,8 @@ Conséquences permanentes :
 - **Les fautes typiques dépendent de la langue maternelle** : un francophone et un
   japonophone ne se trompent pas sur les mêmes choses. La consigne donnée à l'IA doit en
   tenir compte.
+- **Les messages d'erreur du serveur sont des codes**, jamais des phrases : c'est l'app
+  qui les traduit (`ai_not_configured`, `daily_limit`, `refused`…).
 - **Ne jamais supposer qu'une voix est installée** sur l'appareil : demander la liste des
   voix disponibles et prévoir un repli.
 - **Protection des données dans plusieurs juridictions** : RGPD (UE), CCPA (Californie) et
@@ -100,8 +102,8 @@ Défini dans `src/data/partners.ts`. L'accent détermine la voix et l'anglais de
       l'avoir réclamé ; la page officielle dit seulement « une petite quantité »). Sinon,
       acheter 5 $ et fixer une limite de dépense. Puis ranger la clé dans les secrets
       Supabase sous `ANTHROPIC_API_KEY`.
-- [ ] Confirmation d'e-mail bien désactivée dans Supabase
-      (Authentication → Sign In / Providers → Email → décocher *Confirm email*).
+- [x] ~~Confirmation d'e-mail désactivée dans Supabase~~ — **vérifié le 24 nov. 2026** :
+      une inscription renvoie directement une session, donc aucun code n'est demandé.
 - [ ] Compte OpenAI à l'usage, **seulement à l'étape 4b**, pour la transcription (~5 $ de
       crédit suffisent), clé rangée sous `OPENAI_API_KEY`.
 - [ ] Nom de domaine (pour les e-mails, avant la sortie).
@@ -198,3 +200,8 @@ pour comparer Haiku et Sonnet sur la *même* conversation et trancher à l'oreil
   désactivée en développement.
 - **La nouvelle version n'apparaît qu'au deuxième lancement** d'Expo Go : fermer
   complètement l'app, puis rouvrir.
+- **`profiles` restreint l'écriture colonne par colonne** (`revoke update` puis
+  `grant update (liste)` dans la migration des fondations). Une nouvelle colonne que l'app
+  doit écrire **doit être ajoutée à cette liste**, sinon l'écran change mais rien n'est
+  enregistré. C'est exactement le bug trouvé juste après l'étape 3b, sur `native_language`.
+  À vérifier systématiquement en ajoutant une colonne.
