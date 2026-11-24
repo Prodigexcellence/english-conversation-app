@@ -1,5 +1,19 @@
 This is an Expo/React Native mobile application. Prioritize mobile-first patterns, performance, and cross-platform compatibility.
 
+## Product context — read `DECISIONS.md` first
+
+`DECISIONS.md` holds the decisions already taken, the open questions and the roadmap. Read
+it before answering or coding, and update it whenever a decision is made.
+
+**This app is built for users worldwide, not only French speakers.** Assume every answer,
+design and piece of code must hold for a user anywhere on Earth, on any device locale. In
+particular: no user-facing string hardcoded in one language; the user's native language
+(`profiles.native_language`) decides both the interface language and the language the AI
+explains mistakes in; never assume a device has a given TTS voice installed; data-protection
+duties span several jurisdictions (GDPR, CCPA and others); and daily usage caps need one
+explicit time zone. The person this project is built with writes in French — answer them in
+French — but the product itself is multilingual.
+
 ## Expo has changed — do not trust your training data
 
 Expo ships breaking changes every SDK release. APIs you remember are likely renamed, moved, or removed. Before writing any code that touches an Expo, EAS, or React Native API:

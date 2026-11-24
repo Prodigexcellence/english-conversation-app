@@ -8,6 +8,32 @@ https://claude.ai/artifact/9xJQNBdQTj44qMyuFnav5Y
 
 ---
 
+## 0. Principe fondateur
+
+**L'app est faite pour des utilisateurs du monde entier**, pas seulement francophones.
+Toute réponse, tout choix de conception et tout bout de code doit tenir pour quelqu'un
+n'importe où sur Terre, sur un appareil configuré dans n'importe quelle langue.
+
+Conséquences permanentes :
+
+- **Aucun texte visible écrit en dur** dans une seule langue. L'interface doit être
+  traduisible.
+- **La langue maternelle de l'utilisateur** (`profiles.native_language`) décide à la fois de
+  la langue de l'interface **et** de la langue dans laquelle l'IA explique les fautes.
+- **Les fautes typiques dépendent de la langue maternelle** : un francophone et un
+  japonophone ne se trompent pas sur les mêmes choses. La consigne donnée à l'IA doit en
+  tenir compte.
+- **Ne jamais supposer qu'une voix est installée** sur l'appareil : demander la liste des
+  voix disponibles et prévoir un repli.
+- **Protection des données dans plusieurs juridictions** : RGPD (UE), CCPA (Californie) et
+  autres. Donc : aucun fournisseur qui s'entraîne sur les données des utilisateurs.
+- **Les plafonds journaliers** doivent se référer à un fuseau horaire explicite, sinon
+  « par jour » ne veut rien dire à l'échelle mondiale.
+- **Les prix doivent pouvoir varier par pays** : 10 $/mois n'a pas le même poids en Inde,
+  au Brésil ou en Suisse.
+
+---
+
 ## 1. Décisions prises
 
 ### Technique
@@ -146,6 +172,7 @@ pour comparer Haiku et Sonnet sur la *même* conversation et trancher à l'oreil
 | 1 | Squelette de l'app | terminée |
 | 2 | Maquette cliquable des 7 écrans, logo, avatars | terminée |
 | 3 | Comptes, base Supabase (4 tables + RLS), profil qui survit au redémarrage | **terminée** (21 nov. 2026) |
+| 3b | Interface traduisible (i18n) : extraire les ~266 textes français, français + anglais, et enregistrer enfin `native_language` | à faire — **ne demande aucune clé API** |
 | 4a | Vrai test de niveau avec Claude : réponses écrites, partenaire qui parle à voix haute | à faire |
 | 4b | Micro : réponses à l'oral, transcription | à faire |
 | 5+ | Conversation quotidienne, bilans, abonnement | à définir |
