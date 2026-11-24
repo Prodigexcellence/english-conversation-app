@@ -9,8 +9,9 @@ https://claude.ai/artifact/9xJQNBdQTj44qMyuFnav5Y
 Les décisions prises, les questions en attente et la feuille de route sont dans
 [`DECISIONS.md`](DECISIONS.md) — **à lire en premier au début de chaque séance.**
 
-**État actuel : étape 3 terminée** (21 novembre 2026). Comptes réels (Supabase Auth), quatre
-tables avec Row Level Security, navigation protégée, et profil qui survit au redémarrage.
+**État actuel : étape 3b terminée** (24 novembre 2026). Comptes réels (Supabase Auth), quatre
+tables avec Row Level Security, navigation protégée, profil qui survit au redémarrage, et
+interface traduisible (français et anglais, voir `src/i18n/`).
 Prochaine étape : 4a, le vrai test de niveau avec Claude.
 Les sources du logo sont dans `design/logo/`.
 

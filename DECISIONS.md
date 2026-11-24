@@ -45,6 +45,8 @@ Conséquences permanentes :
 | Serveur | Supabase, projet `ryeluvtovfpujuzihywk` (eu-west-1) | étape 3 |
 | Branches | travail sur une branche `claude/…`, référence `refonte`. **Ne jamais fusionner dans `refonte` sans accord explicite.** | étape 3 |
 | Clés secrètes | uniquement dans les secrets Supabase. Jamais dans l'app, jamais dans la conversation. | étape 3 |
+| Traductions | `src/i18n/`. `fr.ts` est la référence et exporte le type `Translations` ; toute autre langue doit le satisfaire, donc `npx tsc --noEmit` refuse une traduction incomplète. **Ajouter une langue = traduire une copie de `fr.ts` + deux lignes dans `languages.ts`.** Aucun écran à modifier. | étape 3b |
+| Langue de l'interface | profil (`native_language`), sinon langue de l'appareil (`expo-localization`), sinon **anglais** — pas français : repli mondial. | étape 3b |
 
 ### Partenaires de conversation
 
@@ -172,7 +174,7 @@ pour comparer Haiku et Sonnet sur la *même* conversation et trancher à l'oreil
 | 1 | Squelette de l'app | terminée |
 | 2 | Maquette cliquable des 7 écrans, logo, avatars | terminée |
 | 3 | Comptes, base Supabase (4 tables + RLS), profil qui survit au redémarrage | **terminée** (21 nov. 2026) |
-| 3b | Interface traduisible (i18n) : extraire les ~266 textes français, français + anglais, et enregistrer enfin `native_language` | à faire — **ne demande aucune clé API** |
+| 3b | Interface traduisible (i18n) : 266 textes extraits, français + anglais, `native_language` lue et écrite, choix de la langue dans les Réglages | **terminée** (24 nov. 2026) |
 | 4a | Vrai test de niveau avec Claude : réponses écrites, partenaire qui parle à voix haute | à faire |
 | 4b | Micro : réponses à l'oral, transcription | à faire |
 | 5+ | Conversation quotidienne, bilans, abonnement | à définir |
