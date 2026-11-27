@@ -80,6 +80,20 @@ const fr = {
     resetCodeSent: (email: string) => `Si un compte existe pour ${email}, un code vient d'y être envoyé.`,
   },
 
+  // Codes renvoyés par la fonction serveur « conversation », traduits par
+  // `conversationErrorMessage` (lib/conversationApi.ts). Un code absent de cette liste
+  // (nouveau code, ou simple coupure réseau) retombe sur `generic`.
+  aiErrors: {
+    aiNotConfigured: "L'IA n'est pas encore configurée. Réessaie plus tard.",
+    serverNotConfigured: "Le serveur n'est pas encore configuré. Réessaie plus tard.",
+    unauthorized: "Ta session a expiré. Reconnecte-toi puis réessaie.",
+    dailyLimit: "Tu as atteint la limite de pratique du jour. Reviens demain !",
+    aiUnavailable: "Ton partenaire ne répond pas pour l'instant. Réessaie dans un instant.",
+    refused: "Ton partenaire préfère changer de sujet. Essaie une autre question.",
+    sessionFinished: "Cette conversation est déjà terminée.",
+    generic: "Une erreur est survenue. Réessaie dans un instant.",
+  },
+
   // Messages d'erreur de Supabase Auth, traduits par `authErrorMessage` (lib/supabase.ts).
   authErrors: {
     invalidCredentials: "E-mail ou mot de passe incorrect.",
@@ -128,10 +142,6 @@ const fr = {
     startTest: "Commencer le test",
     finish: "C'est parti !",
     resultTitle: "Ton niveau estimé",
-    resultBody:
-      "Tu te fais comprendre sur des sujets du quotidien. Tes prochains progrès : les temps du passé et des phrases plus longues.",
-    resultMock:
-      "Maquette : la conversation test n'existe pas encore, ce résultat est un exemple. Tu pourras changer ton niveau dans les réglages.",
     saveError: "Ton profil n'a pas pu être enregistré. Vérifie ton réseau puis réessaie.",
   },
 

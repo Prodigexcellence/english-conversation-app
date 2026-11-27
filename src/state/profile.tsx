@@ -1,7 +1,7 @@
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from "react";
 
-import type { Correction } from "@/data/demoConversation";
 import { type Partner, partners } from "@/data/partners";
+import type { Correction } from "@/lib/conversationApi";
 // Importé depuis `languages` et non depuis `@/i18n` : `@/i18n` lit ce fichier,
 // l'importer en retour créerait une boucle.
 import { isLanguage, type Language } from "@/i18n/languages";

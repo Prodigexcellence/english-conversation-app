@@ -71,12 +71,16 @@ function RootStack() {
         <Stack.Screen name="welcome" />
         <Stack.Screen name="auth" />
       </Stack.Protected>
+      {/* Le test de niveau se passe sur cet écran, pendant l'onboarding : il est donc
+          accessible dès la connexion, pas seulement une fois onboardé. */}
+      <Stack.Protected guard={signedIn}>
+        <Stack.Screen name="conversation" />
+      </Stack.Protected>
       <Stack.Protected guard={signedIn && !onboarded}>
         <Stack.Screen name="onboarding" />
       </Stack.Protected>
       <Stack.Protected guard={signedIn && onboarded}>
         <Stack.Screen name="home" />
-        <Stack.Screen name="conversation" />
         <Stack.Screen name="summary" />
         <Stack.Screen name="settings" />
       </Stack.Protected>

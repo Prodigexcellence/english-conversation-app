@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import {
@@ -16,25 +16,19 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { PartnerAvatar, type PartnerState } from "@/components/PartnerAvatar";
-import { BackButton } from "@/components/ui";
-import { type AiTurn, type Correction, demoAiTurns, demoUserLines, openingLine } from "@/data/demoConversation";
+import { BackButton, Body, Button, Card, Screen, Title } from "@/components/ui";
+import { useT } from "@/i18n";
+import { conversationErrorMessage, type Correction, type LevelEstimate, type Mode, sendTurn } from "@/lib/conversationApi";
+import { speak, stopSpeaking } from "@/lib/speech";
 import { partners } from "@/data/partners";
-import { type Translations, useT } from "@/i18n";
 import { useProfile } from "@/state/profile";
 import { type Colors, fonts, useColors } from "@/theme";
 
-type Message = { id: number; role: "ai" | "user"; text: string; correction?: Correction };
+type Message = { id: number; role: "ai" | "user"; text: string; correction?: Correction | null };
 
-function statusLabel(t: Translations, state: PartnerState): string {
-  const labels: Record<PartnerState, string> = {
-    idle: t.conversation.statusIdle,
-    listening: t.conversation.statusListening,
-    thinking: t.conversation.statusThinking,
-    speaking: t.conversation.statusSpeaking,
-  };
-  return labels[state];
-}
-
+// E6 — Conversation (vraie IA). Le même écran sert au test de niveau (depuis l'onboarding,
+// `mode=level_test`) et à la pratique de tous les jours (depuis l'Accueil, sans `mode`) :
+// seules les consignes données à l'IA changent, côté serveur (supabase/functions/conversation).
 export default function ConversationScreen() {
   const colors = useColors();
   const t = useT();
@@ -42,20 +36,22 @@ export default function ConversationScreen() {
   const { width, height } = useWindowDimensions();
   const avatarSize = Math.min(width * 0.36, height * 0.17, 200);
 
-  const { profile, setLastSession } = useProfile();
+  const params = useLocalSearchParams<{ mode?: Mode }>();
+  const mode: Mode = params.mode === "level_test" ? "level_test" : "conversation";
+
+  const { profile, setLastSession, completeOnboarding } = useProfile();
   const partner = partners.find((p) => p.id === profile.partnerId) ?? partners[0];
   const [startedAt] = useState(() => Date.now());
   const [messages, setMessages] = useState<Message[]>([]);
-  const [phase, setPhaseState] = useState<PartnerState>("idle");
+  const [phase, setPhaseState] = useState<PartnerState>("thinking");
   const [draft, setDraft] = useState("");
-  const [hint, setHint] = useState("");
+  const [error, setError] = useState("");
+  const [sessionId, setSessionId] = useState<string | undefined>();
+  const [result, setResult] = useState<LevelEstimate | null>(null);
+  const [finishing, setFinishing] = useState(false);
 
-  const phaseRef = useRef<PartnerState>("idle");
-  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const phaseRef = useRef<PartnerState>("thinking");
   const nextId = useRef(1);
-  const aiIndex = useRef(0);
-  const userIndex = useRef(0);
-  const pressStart = useRef(0);
   const scrollRef = useRef<ScrollViewInstance>(null);
 
   const setPhase = (p: PartnerState) => {
@@ -63,79 +59,51 @@ export default function ConversationScreen() {
     setPhaseState(p);
   };
 
-  const later = (ms: number, fn: () => void) => {
-    timers.current.push(setTimeout(fn, ms));
-  };
-
-  const clearTimers = () => {
-    timers.current.forEach(clearTimeout);
-    timers.current = [];
-  };
-
-  // Pas de `ref.current++` ici : le React Compiler le traduit mal (le compteur avance avant d'être lu).
-  const takeNext = (counter: { current: number }) => {
-    const value = counter.current;
-    counter.current = value + 1;
-    return value;
-  };
-
   const push = (m: Omit<Message, "id">) => {
-    const id = takeNext(nextId);
+    const id = nextId.current++;
     setMessages((list) => [...list, { ...m, id }]);
   };
 
-  // L'IA « réfléchit », écrit sa réponse, puis la « lit » le temps qu'il faut pour la dire.
-  const aiRespond = (turn: AiTurn) => {
+  // Une seule place qui parle au serveur : affiche l'erreur traduite s'il y en a une,
+  // sinon ajoute la réplique et la fait dire à voix haute.
+  const run = async (text?: string) => {
+    setError("");
     setPhase("thinking");
-    later(1100, () => {
-      push({ role: "ai", text: turn.text, correction: turn.correction });
+    try {
+      const turn = await sendTurn({ mode, sessionId, text });
+      setSessionId(turn.sessionId);
+      push({ role: "ai", text: turn.reply, correction: turn.correction });
       setPhase("speaking");
-      later(Math.max(1600, turn.text.length * 55), () => setPhase("idle"));
-    });
+      speak(turn.reply, partner.accent, profile.voiceSpeed, () => setPhase("idle"));
+      if (turn.levelEstimate) setResult(turn.levelEstimate);
+    } catch (e) {
+      setError(conversationErrorMessage(e, t));
+      setPhase("idle");
+    }
   };
 
-  const nextAiTurn = () => demoAiTurns[takeNext(aiIndex) % demoAiTurns.length];
-
-  // L'IA ouvre la conversation dès l'arrivée sur l'écran.
-  const open = useEffectEvent(() => later(500, () => aiRespond(openingLine(partner.name))));
-  const stop = useEffectEvent(() => clearTimers());
+  // Le partenaire ouvre la conversation dès l'arrivée sur l'écran. Différé d'un tick :
+  // `run` change l'état tout de suite (avant même d'attendre le serveur), et la règle
+  // des crochets interdit de le faire en synchrone dans un effet.
+  const open = useEffectEvent(() => void setTimeout(() => void run(), 0));
+  const stop = useEffectEvent(() => stopSpeaking());
   useEffect(() => {
     open();
     return () => stop();
   }, []);
 
-
   const busy = phase === "thinking" || phase === "speaking";
-
-  const onMicIn = () => {
-    if (phaseRef.current === "thinking" || phaseRef.current === "speaking") return;
-    setHint("");
-    pressStart.current = Date.now();
-    setPhase("listening");
-  };
-
-  const onMicOut = () => {
-    if (phaseRef.current !== "listening") return;
-    if (Date.now() - pressStart.current < 350) {
-      setPhase("idle");
-      setHint(t.conversation.hintTooShort);
-      return;
-    }
-    push({ role: "user", text: demoUserLines[takeNext(userIndex) % demoUserLines.length] });
-    aiRespond(nextAiTurn());
-  };
 
   const onSend = () => {
     const text = draft.trim();
     if (!text || busy) return;
     setDraft("");
-    setHint("");
     push({ role: "user", text });
-    aiRespond(nextAiTurn());
+    void run(text);
   };
 
   const onEnd = () => {
-    clearTimers();
+    stopSpeaking();
     setLastSession({
       durationSec: Math.round((Date.now() - startedAt) / 1000),
       corrections: messages.flatMap((m) => (m.correction ? [m.correction] : [])),
@@ -143,6 +111,28 @@ export default function ConversationScreen() {
     });
     router.replace("/summary");
   };
+
+  // Fin du test de niveau : le niveau est déjà enregistré côté serveur (voir
+  // supabase/functions/conversation) ; il ne reste qu'à finir l'onboarding.
+  const onFinishTest = async () => {
+    setFinishing(true);
+    const ok = await completeOnboarding();
+    setFinishing(false);
+    if (ok) router.replace("/home");
+    else setError(t.onboarding.saveError);
+  };
+
+  if (result) {
+    return (
+      <Screen footer={<Button title={finishing ? t.common.saving : t.onboarding.finish} disabled={finishing} onPress={onFinishTest} />}>
+        <Title>{t.onboarding.resultTitle}</Title>
+        <Card style={resultStyles.card}>
+          <Text style={[resultStyles.level, { color: colors.primary }]}>{result.level}</Text>
+          <Body center>{result.explanation}</Body>
+        </Card>
+      </Screen>
+    );
+  }
 
   return (
     <SafeAreaView style={s.safe} edges={["top", "bottom"]}>
@@ -156,9 +146,11 @@ export default function ConversationScreen() {
               </Text>
               <Text style={s.status}>{statusLabel(t, phase)}</Text>
             </View>
-            <Pressable onPress={onEnd} style={({ pressed }) => [s.endButton, pressed && s.pressed]} accessibilityRole="button">
-              <Text style={s.endText}>{t.conversation.end}</Text>
-            </Pressable>
+            {mode === "conversation" ? (
+              <Pressable onPress={onEnd} style={({ pressed }) => [s.endButton, pressed && s.pressed]} accessibilityRole="button">
+                <Text style={s.endText}>{t.conversation.end}</Text>
+              </Pressable>
+            ) : null}
           </View>
 
           <View style={s.stage}>
@@ -186,8 +178,7 @@ export default function ConversationScreen() {
                           tintColor={colors.primary}
                         />
                         <Text style={s.correctionText}>
-                          {t.conversation.correctionSay}{" "}
-                          <Text style={s.correctionStrong}>{m.correction.better}</Text>{" "}
+                          {t.conversation.correctionSay} <Text style={s.correctionStrong}>{m.correction.better}</Text>{" "}
                           {t.conversation.correctionRatherThan} {m.correction.said}
                         </Text>
                       </View>
@@ -199,11 +190,6 @@ export default function ConversationScreen() {
                   </View>
                 ),
               )}
-              {phase === "listening" ? (
-                <View style={[s.bubble, s.userBubble, s.listeningBubble]}>
-                  <Text style={s.userText}>{t.conversation.listening}</Text>
-                </View>
-              ) : null}
             </ScrollView>
           </View>
 
@@ -216,37 +202,41 @@ export default function ConversationScreen() {
               placeholderTextColor={colors.textMuted}
               style={s.input}
               returnKeyType="send"
+              editable={!busy}
               accessibilityLabel={t.conversation.writeLabel}
             />
-            {draft.trim() ? (
-              <Pressable
-                onPress={onSend}
-                disabled={busy}
-                style={({ pressed }) => [s.roundButton, s.sendButton, (pressed || busy) && s.pressed]}
-                accessibilityRole="button"
-                accessibilityLabel={t.conversation.send}
-              >
-                <SymbolView name={{ ios: "arrow.up", android: "arrow_upward", web: "arrow_upward" }} size={22} tintColor={colors.onPrimary} />
-              </Pressable>
-            ) : (
-              <Pressable
-                onPressIn={onMicIn}
-                onPressOut={onMicOut}
-                disabled={busy}
-                style={[s.roundButton, s.micButton, phase === "listening" && s.micActive, busy && s.pressed]}
-                accessibilityRole="button"
-                accessibilityLabel={t.conversation.holdToSpeak}
-              >
-                <SymbolView name={{ ios: "mic.fill", android: "mic", web: "mic" }} size={28} tintColor={colors.onPrimary} />
-              </Pressable>
-            )}
+            <Pressable
+              onPress={onSend}
+              disabled={busy || !draft.trim()}
+              style={({ pressed }) => [s.roundButton, s.sendButton, (pressed || busy || !draft.trim()) && s.pressed]}
+              accessibilityRole="button"
+              accessibilityLabel={t.conversation.send}
+            >
+              <SymbolView name={{ ios: "arrow.up", android: "arrow_upward", web: "arrow_upward" }} size={22} tintColor={colors.onPrimary} />
+            </Pressable>
           </View>
-          <Text style={s.hint}>{hint || (busy ? " " : t.conversation.hintDefault)}</Text>
+          {/* Le micro revient à l'étape 4b : enregistrement + transcription OpenAI. */}
+          <Text style={s.hint}>{error}</Text>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
+
+function statusLabel(t: ReturnType<typeof useT>, state: PartnerState): string {
+  const labels: Record<PartnerState, string> = {
+    idle: t.conversation.statusIdle,
+    listening: t.conversation.statusListening,
+    thinking: t.conversation.statusThinking,
+    speaking: t.conversation.statusSpeaking,
+  };
+  return labels[state];
+}
+
+const resultStyles = StyleSheet.create({
+  card: { alignItems: "center", paddingVertical: 28 },
+  level: { fontFamily: fonts.semibold, fontSize: 56 },
+});
 
 function makeStyles(c: Colors) {
   return StyleSheet.create({
@@ -268,7 +258,6 @@ function makeStyles(c: Colors) {
     aiText: { fontFamily: fonts.regular, fontSize: 16, lineHeight: 22, color: c.text },
     userBubble: { alignSelf: "flex-end", backgroundColor: c.primary, borderBottomRightRadius: 6 },
     userText: { fontFamily: fonts.regular, fontSize: 16, lineHeight: 22, color: c.onPrimary },
-    listeningBubble: { opacity: 0.6 },
     correction: { flexDirection: "row", alignItems: "center", gap: 6, paddingLeft: 4 },
     correctionText: { fontFamily: fonts.regular, fontSize: 13, color: c.textMuted, flexShrink: 1 },
     correctionStrong: { fontFamily: fonts.semibold, color: c.primary },
@@ -287,8 +276,6 @@ function makeStyles(c: Colors) {
     },
     roundButton: { alignItems: "center", justifyContent: "center", backgroundColor: c.primary },
     sendButton: { width: 48, height: 48, borderRadius: 24 },
-    micButton: { width: 68, height: 68, borderRadius: 34 },
-    micActive: { transform: [{ scale: 1.1 }] },
-    hint: { fontFamily: fonts.regular, fontSize: 13, color: c.textMuted, textAlign: "center", paddingTop: 6, paddingBottom: 4 },
+    hint: { fontFamily: fonts.regular, fontSize: 13, color: c.danger, textAlign: "center", paddingTop: 6, paddingBottom: 4, minHeight: 20 },
   });
 }

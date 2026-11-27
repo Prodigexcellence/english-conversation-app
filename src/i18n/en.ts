@@ -71,6 +71,17 @@ const en: Translations = {
     resetCodeSent: (email: string) => `If an account exists for ${email}, a code has just been sent to it.`,
   },
 
+  aiErrors: {
+    aiNotConfigured: "The AI isn't set up yet. Try again later.",
+    serverNotConfigured: "The server isn't set up yet. Try again later.",
+    unauthorized: "Your session expired. Log in again and try again.",
+    dailyLimit: "You've reached today's practice limit. Come back tomorrow!",
+    aiUnavailable: "Your partner isn't answering right now. Try again in a moment.",
+    refused: "Your partner would rather change the subject. Try another question.",
+    sessionFinished: "This conversation is already over.",
+    generic: "Something went wrong. Try again in a moment.",
+  },
+
   authErrors: {
     invalidCredentials: "Wrong email or password.",
     userExists: "An account already exists for this address. Use “Log in”.",
@@ -118,10 +129,6 @@ const en: Translations = {
     startTest: "Start the test",
     finish: "Let's go!",
     resultTitle: "Your estimated level",
-    resultBody:
-      "You can make yourself understood on everyday topics. What to work on next: past tenses and longer sentences.",
-    resultMock:
-      "Mock-up: the test conversation doesn't exist yet, so this result is an example. You can change your level in the settings.",
     saveError: "Your profile could not be saved. Check your connection and try again.",
   },
 

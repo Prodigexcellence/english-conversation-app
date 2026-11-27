@@ -1,8 +1,9 @@
 import { Image } from "expo-image";
+import { router } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, Text, TextInput, View } from "react-native";
 
-import { BackButton, Body, Button, Card, Chips, Label, Option, Screen, Title } from "@/components/ui";
+import { BackButton, Body, Button, Chips, Label, Option, Screen, Title } from "@/components/ui";
 import { partners } from "@/data/partners";
 import { type Language, LANGUAGE_NAMES, PLANNED_LANGUAGES, type Translations, useI18n } from "@/i18n";
 import { type Goal, type Level, useProfile } from "@/state/profile";
@@ -35,14 +36,12 @@ export default function OnboardingScreen() {
   const { profile, update, completeOnboarding, signOut } = useProfile();
   const [step, setStep] = useState(0);
   const [levelMode, setLevelMode] = useState<"test" | "declare" | null>(null);
-  const [testDone, setTestDone] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
   // Au premier écran, « Retour » déconnecte : l'onboarding est le seul chemin vers l'Accueil.
   const back = () => {
-    if (testDone) setTestDone(false);
-    else if (step > 0) setStep(step - 1);
+    if (step > 0) setStep(step - 1);
     else void signOut();
   };
 
@@ -152,7 +151,7 @@ export default function OnboardingScreen() {
       </>
     );
     footer = <Button title={t.common.continue} disabled={!profile.goal} onPress={() => setStep(4)} />;
-  } else if (!testDone) {
+  } else {
     content = (
       <>
         <Title>{t.onboarding.levelTitle}</Title>
@@ -179,13 +178,10 @@ export default function OnboardingScreen() {
     );
     footer =
       levelMode === "test" ? (
-        <Button
-          title={t.onboarding.startTest}
-          onPress={() => {
-            update({ level: "B1", levelSource: "test" });
-            setTestDone(true);
-          }}
-        />
+        // Le test se passe sur l'écran de conversation (mode `level_test`) : même code
+        // que la pratique de tous les jours, seules les consignes données à l'IA changent.
+        // Il enregistre lui-même le niveau et termine l'onboarding à la fin du test.
+        <Button title={t.onboarding.startTest} onPress={() => router.push({ pathname: "/conversation", params: { mode: "level_test" } })} />
       ) : (
         <Button
           title={saving ? t.common.saving : t.onboarding.finish}
@@ -193,18 +189,6 @@ export default function OnboardingScreen() {
           onPress={finish}
         />
       );
-  } else {
-    content = (
-      <>
-        <Title>{t.onboarding.resultTitle}</Title>
-        <Card style={styles.result}>
-          <Text style={[styles.level, { color: c.primary }]}>B1</Text>
-          <Body center>{t.onboarding.resultBody}</Body>
-        </Card>
-        <Body muted>{t.onboarding.resultMock}</Body>
-      </>
-    );
-    footer = <Button title={saving ? t.common.saving : t.onboarding.finish} disabled={saving} onPress={finish} />;
   }
 
   const progress = Math.min(step + 1, STEPS) / STEPS;
@@ -241,7 +225,5 @@ const styles = StyleSheet.create({
     fontFamily: fonts.regular,
     fontSize: 16,
   },
-  result: { alignItems: "center", paddingVertical: 28 },
-  level: { fontFamily: fonts.semibold, fontSize: 56 },
   error: { fontFamily: fonts.medium, fontSize: 15 },
 });
