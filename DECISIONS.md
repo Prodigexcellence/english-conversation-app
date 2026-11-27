@@ -104,6 +104,11 @@ Défini dans `src/data/partners.ts`. L'accent détermine la voix et l'anglais de
   **et** elle corrige la grammaire toute seule, ce qui masquerait les fautes à corriger.
 - La clé de l'IA ne vit que dans les secrets Supabase ; l'app ne parle qu'à une fonction
   serveur Supabase, jamais directement à Anthropic.
+- **Les « paliers » Anthropic (ex. 500 $) sont des limites de DÉBIT (requêtes/minute),
+  pas un plafond de dépense.** On monte de palier automatiquement en payant ses factures,
+  sans démarche à faire. À ne reconsidérer qu'avec un trafic vraiment important — le
+  plafond quotidien par utilisateur dans `supabase/functions/conversation` protège déjà
+  contre qu'un seul compte sature la limite.
 
 ---
 
