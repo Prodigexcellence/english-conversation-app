@@ -72,10 +72,22 @@ Défini dans `src/data/partners.ts`. L'accent détermine la voix et l'anglais de
 
 ### Intelligence artificielle
 
-- **Conversation et estimation du niveau : Claude** (Anthropic).
+- **Conversation et estimation du niveau : Claude** (Anthropic), via `supabase/functions/conversation`
+  — la seule pièce qui détient la clé. Jamais de mélange avec un autre fournisseur pour la
+  conversation : Claude Haiku 5.5 et le moins cher des Gemini coûtent le même prix au
+  centime près, donc un deuxième fournisseur n'économiserait rien et doublerait la
+  maintenance, la facturation et les endroits où vivent les données des utilisateurs.
 - **Modèle** : `claude-sonnet-5-5` pour le test de niveau (il n'a lieu qu'une fois par
-  utilisateur et doit être juste). Pour les conversations de tous les jours, comparer avec
-  `claude-haiku-5-5`, bien moins cher, et juger sur de vraies conversations.
+  utilisateur et doit être juste). Pour les conversations de tous les jours,
+  `claude-haiku-5-5` (20 fois moins cher), à confirmer sur de vraies conversations.
+  **Piège vérifié : une version plus ancienne coûte plus cher, pas moins** (Opus 5 et
+  Opus 4.8 sont à 5 $/25 $, Opus 5.5, plus récent et meilleur, à 4 $/20 $). Baisser le
+  coût = changer de **gamme** (Opus → Sonnet → Haiku), jamais reculer dans le temps.
+- **Le niveau est écrit par le serveur**, jamais par l'app : à la fin du test, l'app ne
+  fait qu'afficher ce que le serveur a déjà enregistré dans `profiles.level`.
+- **Test de niveau : à l'écrit d'abord (fait), à l'oral ensuite (étape 4b).** Décision du
+  24 nov. 2026 : le micro demande un compte OpenAI de plus ; mieux valait d'abord valider
+  que Claude juge bien, sur le même écran, avant d'ajouter une pièce.
 - **Voix** : **les voix de l'iPad**, via `expo-speech` (inclus dans Expo Go, donc gratuit et
   sans version de développement). Vérifié dans la doc du SDK 58 : le module accepte un code
   de langue (`en-GB` pour Leo, `en-US` pour Marcus), un choix de voix parmi celles de
@@ -120,17 +132,28 @@ serait un peu moins fin. Un abonnement claude.ai ou ChatGPT **ne donne pas** acc
 
 ### Prix de référence
 
-Estimations pour **une conversation de 10 minutes**, à confirmer sur les factures réelles.
-Les tarifs des fournisseurs changent : à revérifier avant toute décision importante.
+Deux colonnes : l'estimation initiale (avant d'avoir écrit les consignes), et le calcul
+refait le 27 nov. 2026 à partir des vraies consignes de `supabase/functions/conversation`
+(~14 000 jetons envoyés, ~1 000 reçus, pour 10 minutes). **Le calcul est plus fiable, mais
+reste un calcul : la vraie facture viendra de `usage_daily` une fois la clé Claude posée.**
 
-| Poste | Coût |
-|---|---|
-| Claude Sonnet 5.5 | ~15 à 25 centimes |
-| Claude Haiku 5.5 | ~1 à 2 centimes |
-| Voix de l'iPad (`expo-speech`) | **gratuit** |
-| Voix OpenAI | ~7 centimes |
-| Voix ElevenLabs | ~20 à 45 centimes |
-| Transcription (OpenAI, ou ElevenLabs Scribe) | ~1,5 à 2 centimes |
+| Poste | Estimation initiale | Calculé sur les vraies consignes |
+|---|---|---|
+| Claude Opus 5 / Opus 4.8 | — | 9,5 centimes (plus cher qu'Opus 5.5 : versions anciennes) |
+| Claude Opus 5.5 | — | 7,6 centimes |
+| Claude Sonnet 5.5 | ~15 à 25 centimes | **3,8 centimes** |
+| Claude Haiku 5.5 | ~1 à 2 centimes | **0,2 centime** |
+| Gemini 2.5 Flash-Lite (le moins cher de Gemini) | — | 0,2 centime — identique à Haiku 5.5 |
+| Voix de l'iPad (`expo-speech`) | gratuit | **gratuit** |
+| Voix OpenAI | ~7 centimes | (à recalculer à l'étape 4b) |
+| Voix ElevenLabs | ~20 à 45 centimes | (à recalculer si reconsidéré) |
+| Transcription (OpenAI, ou ElevenLabs Scribe) | ~1,5 à 2 centimes | (à recalculer à l'étape 4b) |
+
+**Conclusion du recalcul : c'est la voix qui coûte, pas l'IA.** Avec les voix de l'iPad,
+l'IA (Haiku 5.5) revient à grosso modo **0,2 centime les 10 minutes, soit ~11 centimes par
+mois** pour un utilisateur qui pratique 20 min/jour. Les 10 à 20 $/mois évoqués au départ
+venaient d'une estimation faite avant d'avoir le texte des consignes : à jeter, pas à
+retenir comme chiffre de référence.
 
 ### Les leviers, du meilleur au moins bon
 
@@ -177,8 +200,8 @@ pour comparer Haiku et Sonnet sur la *même* conversation et trancher à l'oreil
 | 2 | Maquette cliquable des 7 écrans, logo, avatars | terminée |
 | 3 | Comptes, base Supabase (4 tables + RLS), profil qui survit au redémarrage | **terminée** (21 nov. 2026) |
 | 3b | Interface traduisible (i18n) : 266 textes extraits, français + anglais, `native_language` lue et écrite, choix de la langue dans les Réglages | **terminée** (24 nov. 2026) |
-| 4a | Vrai test de niveau avec Claude : réponses écrites, partenaire qui parle à voix haute | à faire |
-| 4b | Micro : réponses à l'oral, transcription | à faire |
+| 4a | Vrai test de niveau avec Claude : réponses écrites, partenaire qui parle à voix haute (iPad) | **codé et publié** (27 nov. 2026) — **reste à tester avec une clé Claude** |
+| 4b | Micro : réponses à l'oral (le même écran, pour le test comme pour la pratique), transcription OpenAI | à faire — demande un compte OpenAI |
 | 5+ | Conversation quotidienne, bilans, abonnement | à définir |
 
 ### Critères de validation de l'étape 3 (tous vérifiés)

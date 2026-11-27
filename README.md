@@ -9,10 +9,10 @@ https://claude.ai/artifact/9xJQNBdQTj44qMyuFnav5Y
 Les décisions prises, les questions en attente et la feuille de route sont dans
 [`DECISIONS.md`](DECISIONS.md) — **à lire en premier au début de chaque séance.**
 
-**État actuel : étape 3b terminée** (24 novembre 2026). Comptes réels (Supabase Auth), quatre
-tables avec Row Level Security, navigation protégée, profil qui survit au redémarrage, et
-interface traduisible (français et anglais, voir `src/i18n/`).
-Prochaine étape : 4a, le vrai test de niveau avec Claude.
+**État actuel : étape 4a codée et publiée, pas encore testée** (27 novembre 2026). Le test de
+niveau parle pour de vrai à Claude (`supabase/functions/conversation`), à l'écrit, et Leo /
+Marcus répondent avec les voix de l'iPad (`expo-speech`). Reste à poser une clé Claude dans
+les secrets Supabase pour pouvoir tester. Prochaine étape : 4b, le micro.
 Les sources du logo sont dans `design/logo/`.
 
 L'ancien squelette de septembre 2026 reste disponible sur la branche
