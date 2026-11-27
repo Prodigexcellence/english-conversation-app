@@ -39,7 +39,10 @@ export default function ConversationScreen() {
   const avatarSize = Math.min(width * 0.36, height * 0.17, 200);
   // Le clavier d'iPad est haut : sans ça, l'avatar prenait toute la place restante et
   // la conversation disparaissait pendant la saisie (signalé après le premier test).
+  // Il se fait seulement plus petit, sans disparaître : on garde Marcus à l'écran en
+  // même temps qu'une partie de la conversation (deuxième retour, après le premier essai).
   const keyboardVisible = useKeyboardVisible();
+  const stageSize = keyboardVisible ? avatarSize * 0.5 : avatarSize;
 
   const params = useLocalSearchParams<{ mode?: Mode }>();
   const mode: Mode = params.mode === "level_test" ? "level_test" : "conversation";
@@ -180,11 +183,9 @@ export default function ConversationScreen() {
             ) : null}
           </View>
 
-          {keyboardVisible ? null : (
-            <View style={s.stage}>
-              <PartnerAvatar partner={partner} state={phase} size={avatarSize} />
-            </View>
-          )}
+          <View style={[s.stage, keyboardVisible && s.stageCompact]}>
+            <PartnerAvatar partner={partner} state={phase} size={stageSize} />
+          </View>
 
           <View style={s.chat}>
             <ScrollView
@@ -279,6 +280,7 @@ function makeStyles(c: Colors) {
     endText: { fontFamily: fonts.semibold, fontSize: 15, color: c.primary },
     pressed: { opacity: 0.55 },
     stage: { alignItems: "center", justifyContent: "center", backgroundColor: c.stage, borderRadius: 24, marginBottom: 12 },
+    stageCompact: { marginBottom: 6 },
     chat: { flex: 1, backgroundColor: c.surface, borderRadius: 20, borderWidth: 1, borderColor: c.border, overflow: "hidden" },
     chatContent: { padding: 14, gap: 10 },
     bubble: { maxWidth: "84%", paddingVertical: 10, paddingHorizontal: 14, borderRadius: 18 },
