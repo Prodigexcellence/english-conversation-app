@@ -43,8 +43,6 @@ export type PromptInput = {
   level: string | null;
   goal: string | null;
   goalNote: string;
-  // Nombre de réponses déjà données par l'apprenant dans cette conversation.
-  learnerTurns: number;
 };
 
 export const LEVEL_TEST_MIN_TURNS = 5;
@@ -89,7 +87,7 @@ export function buildSystemPrompt(input: PromptInput): string {
       `- Then raise the difficulty step by step: past and future events, opinions and reasons, hypotheses, then an abstract or nuanced subject.`,
       `- Drop back down a step as soon as the learner struggles, so they never feel stuck.`,
       `- Judge what they CAN do: range of structures, tenses, vocabulary, fluency, and how well they handle a question they did not expect. Do not judge spelling or typing.`,
-      `- The learner has given ${input.learnerTurns} reply/replies so far. Keep the chat going until about ${LEVEL_TEST_TARGET_TURNS}, then set "levelEstimate" and "finished" to true.`,
+      `- Keep the chat going until the learner has given about ${LEVEL_TEST_TARGET_TURNS} replies, then set "levelEstimate" and "finished" to true. A separate note before the conversation tells you how many replies they have given so far.`,
       `- Conclude earlier (never before ${LEVEL_TEST_MIN_TURNS} replies) only if the level is already beyond doubt — for instance a learner who cannot sustain even the simplest exchange.`,
       `- In "levelEstimate": "level" is the CEFR code, and "explanation" is 2 to 3 sentences in ${nativeName} telling them warmly what they manage well and what to work on next. No jargon.`,
       `- On the turn where you give the estimate, your "reply" should round the conversation off kindly, without announcing a result — the app displays it.`,
@@ -108,6 +106,15 @@ export function buildSystemPrompt(input: PromptInput): string {
   }
 
   return lines.filter((line): line is string => line !== null).join("\n");
+}
+
+// Seule partie des consignes qui change à chaque tour. Envoyée comme un second bloc
+// système, SANS mise en cache : mélangée au reste, elle empêcherait le premier bloc
+// (identique à chaque tour) d'être mis en cache lui aussi, puisque Claude met en cache
+// un préfixe, octet pour octet — un seul caractère différent invalide tout ce qui suit.
+export function buildTurnNote(mode: Mode, learnerTurns: number): string | null {
+  if (mode !== "level_test") return null;
+  return `The learner has now given ${learnerTurns} reply/replies in this conversation.`;
 }
 
 // Premier message, jamais montré ni enregistré : la conversation doit commencer par un

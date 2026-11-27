@@ -12,7 +12,7 @@
 import Anthropic from "npm:@anthropic-ai/sdk@1.14.0";
 import { createClient } from "npm:@supabase/supabase-js@2.119.2";
 
-import { buildSystemPrompt, KICKOFF, type Mode, type PartnerId } from "./prompt.ts";
+import { buildSystemPrompt, buildTurnNote, KICKOFF, type Mode, type PartnerId } from "./prompt.ts";
 
 // Sonnet 5.5 pour le test de niveau : il n'a lieu qu'une fois par utilisateur et doit
 // être juste. Les conversations de tous les jours passeront à Haiku après comparaison
@@ -205,8 +205,8 @@ Deno.serve(async (req) => {
     level: profile.level,
     goal: profile.goal,
     goalNote: profile.goal_note ?? "",
-    learnerTurns: learnerTurns + (userText ? 1 : 0),
   });
+  const turnNote = buildTurnNote(mode, learnerTurns + (userText ? 1 : 0));
 
   // ── Claude ───────────────────────────────────────────────────────────────────
   const anthropic = new Anthropic({ apiKey: anthropicKey });
@@ -215,9 +215,14 @@ Deno.serve(async (req) => {
     response = await anthropic.messages.create({
       model: MODEL,
       max_tokens: MAX_TOKENS,
-      // Les consignes ne changent pas d'un tour à l'autre : mises en cache, elles
-      // sont refacturées environ dix fois moins cher.
-      system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
+      // Le premier bloc ne change pas d'un tour à l'autre : mis en cache, il est
+      // refacturé environ dix fois moins cher. Le second (le compteur de réponses,
+      // qui lui change à chaque tour) reste hors cache, sans quoi il invaliderait
+      // tout ce qui le précède — Claude met en cache un préfixe, pas des morceaux.
+      system: [
+        { type: "text", text: system, cache_control: { type: "ephemeral" } },
+        ...(turnNote ? [{ type: "text" as const, text: turnNote }] : []),
+      ],
       messages,
       output_config: { effort: EFFORT, format: { type: "json_schema", schema: REPLY_SCHEMA } },
     });
