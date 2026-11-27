@@ -220,7 +220,7 @@ pour comparer Haiku et Sonnet sur la *même* conversation et trancher à l'oreil
 | 2 | Maquette cliquable des 7 écrans, logo, avatars | terminée |
 | 3 | Comptes, base Supabase (4 tables + RLS), profil qui survit au redémarrage | **terminée** (21 nov. 2026) |
 | 3b | Interface traduisible (i18n) : 266 textes extraits, français + anglais, `native_language` lue et écrite, choix de la langue dans les Réglages | **terminée** (24 nov. 2026) |
-| 4a | Vrai test de niveau avec Claude : réponses écrites, partenaire qui parle à voix haute (iPad) | **codé, publié et vérifié de bout en bout** (27 nov. 2026, voir § 2 et § 3) — **reste à tester sur l'iPad** |
+| 4a | Vrai test de niveau avec Claude : réponses écrites, partenaire qui parle à voix haute (iPad) | **terminée, testée et validée sur l'iPad** (27 nov. 2026) |
 | 4b | Micro : réponses à l'oral (le même écran, pour le test comme pour la pratique), transcription OpenAI | à faire — demande un compte OpenAI |
 | 5+ | Conversation quotidienne, bilans, abonnement | à définir |
 
@@ -248,3 +248,13 @@ pour comparer Haiku et Sonnet sur la *même* conversation et trancher à l'oreil
   doit écrire **doit être ajoutée à cette liste**, sinon l'écran change mais rien n'est
   enregistré. C'est exactement le bug trouvé juste après l'étape 3b, sur `native_language`.
   À vérifier systématiquement en ajoutant une colonne.
+- **Toujours relire son propre test avant de le déclarer réussi.** Le bug des corrections
+  répétées (étape 4a) était visible dans ma première sortie de test, mais je ne l'avais
+  pas signalé sur le moment — c'est l'utilisateur qui l'a trouvé en testant sur l'iPad.
+- **Le clavier d'iPad est haut : un élément de taille fixe au-dessus d'une zone en
+  `flex: 1` peut l'écraser complètement une fois le clavier ouvert**, sans que ça se voie
+  en lisant le code. `src/lib/useKeyboardVisible.ts` sert à alléger l'écran pendant la
+  saisie — par défaut, réduire plutôt que faire disparaître (l'utilisateur veut souvent
+  encore voir la pièce qu'on allège).
+- **Une mise à jour EAS exige de fermer complètement l'app et de la rouvrir deux fois** —
+  recroisé plusieurs fois, y compris là où un vrai bug semblait pourtant certain.
