@@ -21,6 +21,7 @@ import { BackButton, Body, Button, Card, Screen, Title } from "@/components/ui";
 import { useT } from "@/i18n";
 import { conversationErrorMessage, type Correction, type LevelEstimate, type Mode, sendTurn } from "@/lib/conversationApi";
 import { speak, stopSpeaking } from "@/lib/speech";
+import { useKeyboardVisible } from "@/lib/useKeyboardVisible";
 import { partners } from "@/data/partners";
 import { useProfile } from "@/state/profile";
 import { type Colors, fonts, useColors } from "@/theme";
@@ -36,6 +37,9 @@ export default function ConversationScreen() {
   const s = makeStyles(colors);
   const { width, height } = useWindowDimensions();
   const avatarSize = Math.min(width * 0.36, height * 0.17, 200);
+  // Le clavier d'iPad est haut : sans ça, l'avatar prenait toute la place restante et
+  // la conversation disparaissait pendant la saisie (signalé après le premier test).
+  const keyboardVisible = useKeyboardVisible();
 
   const params = useLocalSearchParams<{ mode?: Mode }>();
   const mode: Mode = params.mode === "level_test" ? "level_test" : "conversation";
@@ -176,9 +180,11 @@ export default function ConversationScreen() {
             ) : null}
           </View>
 
-          <View style={s.stage}>
-            <PartnerAvatar partner={partner} state={phase} size={avatarSize} />
-          </View>
+          {keyboardVisible ? null : (
+            <View style={s.stage}>
+              <PartnerAvatar partner={partner} state={phase} size={avatarSize} />
+            </View>
+          )}
 
           <View style={s.chat}>
             <ScrollView

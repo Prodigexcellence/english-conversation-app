@@ -5,6 +5,7 @@ import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput,
 import { BackButton, Body, Button, Chips, Screen, Title } from "@/components/ui";
 import { useT } from "@/i18n";
 import { authErrorMessage, supabase } from "@/lib/supabase";
+import { useKeyboardVisible } from "@/lib/useKeyboardVisible";
 import { useAuth } from "@/state/auth";
 import { fonts, useColors } from "@/theme";
 
@@ -20,6 +21,9 @@ const CODE = /^\d{6,10}$/;
 export default function AuthScreen() {
   const c = useColors();
   const t = useT();
+  // Le clavier d'iPad est haut : sans ça, le mot de passe (sous le titre) restait caché
+  // derrière, pas directement visible (signalé après le test de l'étape 4a).
+  const keyboardVisible = useKeyboardVisible();
   const { setRecovering } = useAuth();
   const params = useLocalSearchParams<{ mode?: Mode }>();
   const [mode, setMode] = useState<Mode>(params.mode === "login" ? "login" : "signup");
@@ -279,8 +283,8 @@ export default function AuthScreen() {
         <View style={styles.top}>
           <BackButton onPress={back} />
         </View>
-        <Title>{title}</Title>
-        {info ? <Body muted>{info}</Body> : null}
+        {keyboardVisible ? null : <Title>{title}</Title>}
+        {info && !keyboardVisible ? <Body muted>{info}</Body> : null}
         {content}
         {error ? (
           <Text style={[styles.error, { color: c.danger }]} accessibilityLiveRegion="polite">
