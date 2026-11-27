@@ -160,6 +160,21 @@ mois** pour un utilisateur qui pratique 20 min/jour. Les 10 à 20 $/mois évoqu�
 venaient d'une estimation faite avant d'avoir le texte des consignes : à jeter, pas à
 retenir comme chiffre de référence.
 
+### Mesure réelle (27 nov. 2026, premier test avec une vraie clé)
+
+Un test de niveau complet (8 échanges, jusqu'à l'estimation B2) a coûté **~2,5 centimes**
+en vrai — cohérent avec le calcul ci-dessus. Deux leçons tirées de ce premier essai :
+
+- **Un bug empêchait toute mise en cache** : le nombre de réponses déjà données était
+  écrit dans le texte même des consignes, qui changeait donc à chaque tour — alors que
+  Claude met en cache un PRÉFIXE identique octet pour octet. Corrigé en sortant cette
+  seule ligne dynamique dans un second bloc système, non mis en cache, à la suite du
+  premier. Depuis, la mise en cache s'active bien dès le deuxième appel
+  (~1719 jetons/appel sur ce test).
+- **Le premier appel ne profite jamais du cache** (il l'écrit, il ne le lit pas encore) :
+  seule la DEUXIÈME réplique d'une conversation et les suivantes en bénéficient. Normal,
+  pas un bug — juste à ne pas s'attendre à un cache dès le premier message.
+
 ### Les leviers, du meilleur au moins bon
 
 Les trois premiers sont **gratuits et sans perte de qualité** :
@@ -205,7 +220,7 @@ pour comparer Haiku et Sonnet sur la *même* conversation et trancher à l'oreil
 | 2 | Maquette cliquable des 7 écrans, logo, avatars | terminée |
 | 3 | Comptes, base Supabase (4 tables + RLS), profil qui survit au redémarrage | **terminée** (21 nov. 2026) |
 | 3b | Interface traduisible (i18n) : 266 textes extraits, français + anglais, `native_language` lue et écrite, choix de la langue dans les Réglages | **terminée** (24 nov. 2026) |
-| 4a | Vrai test de niveau avec Claude : réponses écrites, partenaire qui parle à voix haute (iPad) | **codé et publié** (27 nov. 2026) — **reste à tester avec une clé Claude** |
+| 4a | Vrai test de niveau avec Claude : réponses écrites, partenaire qui parle à voix haute (iPad) | **codé, publié et vérifié de bout en bout** (27 nov. 2026, voir § 2 et § 3) — **reste à tester sur l'iPad** |
 | 4b | Micro : réponses à l'oral (le même écran, pour le test comme pour la pratique), transcription OpenAI | à faire — demande un compte OpenAI |
 | 5+ | Conversation quotidienne, bilans, abonnement | à définir |
 
