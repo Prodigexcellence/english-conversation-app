@@ -178,6 +178,11 @@ const fr = {
     holdToSpeak: "Maintenir pour parler",
     hintTooShort: "Garde le doigt sur le micro pendant que tu parles.",
     hintDefault: "Maintiens le micro pour parler, ou écris ta réponse.",
+    // Confirmation avant de quitter par erreur (flèche de retour) une conversation
+    // en cours : sans elle, un retour accidentel perdait toute la conversation.
+    leaveTitle: "Quitter la conversation ?",
+    leaveBody: "Si tu reviens, tu recommenceras une nouvelle conversation depuis le début.",
+    leaveConfirm: "Quitter",
   },
 
   summary: {

@@ -2,6 +2,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -102,6 +103,28 @@ export default function ConversationScreen() {
     void run(text);
   };
 
+  // Un retour accidentel (la flèche en haut à gauche) ne doit jamais faire perdre une
+  // conversation en cours sans prévenir : on ne demande qu'à partir du moment où
+  // l'utilisateur a vraiment répondu une fois, pas juste entendu la phrase d'ouverture.
+  const hasProgress = messages.some((m) => m.role === "user");
+  const onBack = () => {
+    if (!hasProgress) {
+      router.back();
+      return;
+    }
+    Alert.alert(t.conversation.leaveTitle, t.conversation.leaveBody, [
+      { text: t.common.cancel, style: "cancel" },
+      {
+        text: t.conversation.leaveConfirm,
+        style: "destructive",
+        onPress: () => {
+          stopSpeaking();
+          router.back();
+        },
+      },
+    ]);
+  };
+
   const onEnd = () => {
     stopSpeaking();
     setLastSession({
@@ -139,7 +162,7 @@ export default function ConversationScreen() {
       <KeyboardAvoidingView style={s.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <View style={s.column}>
           <View style={s.header}>
-            <BackButton />
+            <BackButton onPress={onBack} />
             <View style={s.flex}>
               <Text style={s.name} accessibilityRole="header">
                 {partner.name}

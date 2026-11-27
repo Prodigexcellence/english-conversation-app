@@ -164,6 +164,9 @@ const en: Translations = {
     holdToSpeak: "Hold to speak",
     hintTooShort: "Keep your finger on the microphone while you speak.",
     hintDefault: "Hold the microphone to speak, or write your answer.",
+    leaveTitle: "Leave the conversation?",
+    leaveBody: "If you come back, you'll start a brand new conversation from scratch.",
+    leaveConfirm: "Leave",
   },
 
   summary: {

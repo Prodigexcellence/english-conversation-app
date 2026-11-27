@@ -71,6 +71,7 @@ export function buildSystemPrompt(input: PromptInput): string {
     ``,
     `# Corrections`,
     `- At most ONE correction per turn, and only when the mistake is worth it. Let small slips go: being interrupted constantly discourages people.`,
+    `- A correction must come ONLY from the learner's message you are replying to right now, never from an earlier turn. Each mistake gets flagged once, the turn it happens — do not repeat a correction you already gave earlier in this conversation, even if the same mistake happens again later.`,
     `- Put corrections ONLY in the "correction" field, never inside "reply". The app shows them separately, under your message.`,
     `- "said" holds the learner's exact wrong words, as short as possible. "better" holds the natural version. Nothing else, no explanation.`,
     `- Never correct spelling or punctuation: the learner is speaking, not writing.`,
